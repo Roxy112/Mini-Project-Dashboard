@@ -46,3 +46,24 @@ header {
     height: 24px;
     border: 1px dashed #999;
 }
+
+/* 3.主体布局 */
+.content-wrapper {
+    display: flex;
+    margin-top: 20px;
+}
+
+/* 边栏布局 */
+.sidebar {
+    width: 150px;
+    flex-shrink: 0;     /* 固定元素大小 */
+    /* 添加右边框 */
+    border-right: 1px dashed #ccc;
+    padding-right: 20px;
+}
+
+/* 主内容布局 */
+.main-content {
+    flex-grow: 1;         /* 主内容占据右侧所有剩余空间 */
+    padding-left: 40px;   /* 和边栏间留出距离 */
+}
