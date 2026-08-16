@@ -4,6 +4,7 @@
         <link rel="stylesheet" href="./styles.css">
         <meta charset="UTF-8">
         <title>Mini Project Dashboard</title>
+        <script src="./app.js" defer></script>
     </head>
     <body>
         <div class="layout-wrapper">
@@ -48,18 +49,26 @@
                         <h3>Recent Tasks</h3>
                         <ul>
                             <li>
-                                <label><input type="checkbox">Learn JavaScript</label>
+                                <label><input type="checkbox" class="item-check">
+                                <span class="item-task">Learn JavaScript</span></label>
                             </li>
                             <li>
-                                <label><input type="checkbox">Build Dashboard</label>
+                                <label><input type="checkbox" class="item-check">
+                                <span class="item-task">Build Dashboard</span></label>
                             </li>
                             <li>
-                                <label><input type="checkbox">Learn Git</label>
+                                <label><input type="checkbox" class="item-check">
+                                <span class="item-task">Learn Git</span></label>
                             </li>
                         </ul>
 
-                        <!-- add task button -->
-                        <button class="add-task-button">+ Add Task</button>
+                        <br>
+
+                        <!-- add task area -->
+                        <label>
+                            <input type="text" id="new-task-input" placeholder="请输入新任务">
+                            <button class="add-task-button">+ Add Task</button>
+                        </label>
                     </section>
 
                 </main>
