@@ -1,23 +1,48 @@
+/* 1.全局与基础样式 */
 body {
-    font-family: sans-serif;
-    color: #000;
-    margin: 20px;
+    font-family: sans-serif; /* 无衬线字体 */
+    color: #000;           /* 纯黑文字 */
+    margin: 20px;            /* 留出外边距 */
 }
 
+/* 移除无序列表的默认元的和左侧缩进 */
 ul {
     list-style-type: none;
     padding: 0;
     margin: 0;
 }
 
+/* 按钮基础样式调整 */
 h1, h2, h3 {
     margin: 0;
 }
 
 button {
-    background-color: transparent;
-    border: 1px solid #333;
-    padding: 5px 10px;
-    cursor: pointer;
+    background-color: transparent; /* 透明背景 */
+    border: 1px solid #333;      /* 黑色边框 */
+    padding: 5px 10px;             /* 内边距 */
+    cursor: pointer;               /* 鼠标悬停样式 */
     font-size: 16px;
+}
+
+/* 2.Header 布局 */
+header {
+    display: flex;                      /* 开启 Flexbox 布局 */
+    justify-content: space-between;     /* 主轴空间均匀分布在元素之间 */
+    align-items: center;                /* 交叉轴居中 */
+    padding-bottom: 10px;               /* 底部留出空间 */  
+}
+
+/* 右上角的名字和图标 */
+.user-profile {
+    display: flex;                
+    align-items: center;        /* 垂直居中对齐 */
+    gap: 15px;                  /* 留出名字和图标间的间距 */
+}
+
+/* 设置图片的占位符 */
+.user-profile img {
+    width: 24px;
+    height: 24px;
+    border: 1px dashed #999;
 }
