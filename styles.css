@@ -129,7 +129,13 @@ header {
 
 .add-task-button {
     display: block;
-    margin: 30px auto 0;   /* 左右自动居中 */
+    margin: 5px auto 0;   /* 左右自动居中 */
     border: none;
     font-weight: bold;
+}
+
+/* 删除线 */
+.line-through {
+    text-decoration: line-through;
+    color: #999;
 }
