@@ -67,3 +67,69 @@ header {
     flex-grow: 1;         /* 主内容占据右侧所有剩余空间 */
     padding-left: 40px;   /* 和边栏间留出距离 */
 }
+
+/* 4.细节调整 */
+
+/* 边栏导航按钮 */
+.sidebar li {
+    margin-bottom: 15px;
+}
+
+/* 调整边栏的按钮宽度 */
+.sidebar button {
+    width: 100px;
+    text-align: left;    /* 按钮左对齐 */
+    border: none;        /* 去除按钮边框 */
+}
+
+/* 主内容 */
+
+/* My project 样式 */
+.projects {
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.projects h3 {
+    margin-bottom: 20px;
+}
+
+.project-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+/* Recent Tasks 样式 */
+.tasks {
+    text-align: center;
+}
+
+.tasks h3 {
+    margin-bottom: 20px;
+}
+
+.tasks ul {
+    /* 任务列表左对齐，整体区域居中 */
+    display: inline-block;    /* 将ul变为行内块元素 */
+    text-align: left;         /* 内部文字左对齐 */
+}
+
+.tasks li {
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+/* 复选框样式 */
+.tasks input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin-right: 10px;
+}
+
+.add-task-button {
+    display: block;
+    margin: 30px auto 0;   /* 左右自动居中 */
+    border: none;
+    font-weight: bold;
+}
