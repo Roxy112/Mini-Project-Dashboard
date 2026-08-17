@@ -1,6 +1,32 @@
-// 给勾选的任务添加删除线
+// 任务数据
+let task = [
+    { id: 1, text: 'Learn JavaScript', done: false },
+    { id: 2, text: 'Build Dashboard', done: false },
+    { id: 3, text: 'Learn Git', done: false }
+]
+
 // 获取任务列表的父容器<ul>
 const taskList = document.querySelector('.tasks ul');
+
+// 渲染任务列表
+function renderTasks() {
+    taskList.innerHTML = '';
+    task.forEach(task => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <label>
+                <input type="checkbox" class="item-check" ${task.done ? 'check' : ''}>
+                <span class="item-task">${task.txt}</span>
+            </label>
+        `;
+        taskList.appendChild(li);
+    });
+}
+
+renderTasks();
+
+// 给勾选的任务添加删除线
+
 
 // 监听整个列表的 change 事件
 taskList.addEventListener('change', function(event) {
@@ -28,18 +54,13 @@ addBtn.addEventListener('click',function() {
         alert('请输入任务内容！');
         return;
     }
-    // 将获取到的文本插入到新元素的指定位置
-    const newTaskHTML = `
-        <li>
-            <label>
-                <input type="checkbox" class="item-check">
-                <span class="item-task">${taskText}</span>
-            </label>
-        </li>
-    `;
-
-    //插入到 <ul> 内部的末尾
-    taskList.insertAdjacentHTML('beforeend', newTaskHTML);
+    
+    const newTask = {
+        id: Date.now(),
+        text: taskText,
+        done: false
+    };
+    TextTrack.push(newTask);
 
     // 清空输入框
     taskInput.value = '';
