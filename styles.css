@@ -1,90 +1,90 @@
-/* 1.全局与基础样式 */
+/* 1. 全局与基础样式 */
 body {
-    font-family: sans-serif; /* 无衬线字体 */
-    color: #000;           /* 纯黑文字 */
-    margin: 20px;            /* 留出外边距 */
+    font-family: sans-serif;
+    color: #000;
+    margin: 20px;
 }
 
-/* 移除无序列表的默认元的和左侧缩进 */
+/* 移除无序列表的默认样式和左侧缩进 */
 ul {
     list-style-type: none;
     padding: 0;
     margin: 0;
 }
 
-/* 按钮基础样式调整 */
-h1, h2, h3 {
+/* 统一标题的默认外边距 */
+h1,
+h2,
+h3 {
     margin: 0;
 }
 
+/* 按钮基础样式 */
 button {
-    background-color: transparent; /* 透明背景 */
-    border: 1px solid #333;      /* 黑色边框 */
-    padding: 5px 10px;             /* 内边距 */
-    cursor: pointer;               /* 鼠标悬停样式 */
+    background-color: transparent;
+    border: 1px solid #333;
+    padding: 5px 10px;
+    cursor: pointer;
     font-size: 16px;
 }
 
-/* 2.Header 布局 */
+/* 2. 页头布局 */
 header {
-    display: flex;                      /* 开启 Flexbox 布局 */
-    justify-content: space-between;     /* 主轴空间均匀分布在元素之间 */
-    align-items: center;                /* 交叉轴居中 */
-    padding-bottom: 10px;               /* 底部留出空间 */  
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
 }
 
-/* 右上角的名字和图标 */
+/* 右上角的用户名和设置图标 */
 .user-profile {
-    display: flex;                
-    align-items: center;        /* 垂直居中对齐 */
-    gap: 15px;                  /* 留出名字和图标间的间距 */
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
-/* 设置图片的占位符 */
+/* 设置图标的大小和边框 */
 .user-profile img {
     width: 24px;
     height: 24px;
     border: 1px dashed #999;
 }
 
-/* 3.主体布局 */
+/* 3. 主体布局 */
 .content-wrapper {
     display: flex;
     margin-top: 20px;
 }
 
-/* 边栏布局 */
+/* 侧边导航栏 */
 .sidebar {
     width: 150px;
-    flex-shrink: 0;     /* 固定元素大小 */
-    /* 添加右边框 */
+    flex-shrink: 0;
     border-right: 1px dashed #ccc;
     padding-right: 20px;
 }
 
-/* 主内容布局 */
+/* 主内容占据剩余可用空间 */
 .main-content {
-    flex-grow: 1;         /* 主内容占据右侧所有剩余空间 */
-    padding-left: 40px;   /* 和边栏间留出距离 */
+    flex-grow: 1;
+    padding-left: 40px;
 }
 
-/* 4.细节调整 */
+/* 4. 页面细节 */
 
-/* 边栏导航按钮 */
+/* 侧边导航项之间的垂直间距 */
 .sidebar li {
     margin-bottom: 15px;
 }
 
-/* 调整边栏的按钮宽度 */
+/* 统一侧边导航按钮的宽度和对齐方式 */
 .sidebar button {
     width: 100px;
-    text-align: left;    /* 按钮左对齐 */
-    border: none;        /* 去除按钮边框 */
+    text-align: left;
+    border: none;
 }
 
-/* 主内容 */
-
-/* My project 样式 */
+/* 项目区域 */
 .projects {
     margin-bottom: 40px;
     text-align: center;
@@ -97,10 +97,11 @@ header {
 .project-buttons {
     display: flex;
     justify-content: center;
+    align-items: center;
     gap: 20px;
 }
 
-/* Recent Tasks 样式 */
+/* 任务区域 */
 .tasks {
     text-align: center;
 }
@@ -109,10 +110,10 @@ header {
     margin-bottom: 20px;
 }
 
+/* 任务列表本身居中，列表内容保持左对齐 */
 .tasks ul {
-    /* 任务列表左对齐，整体区域居中 */
-    display: inline-block;    /* 将ul变为行内块元素 */
-    text-align: left;         /* 内部文字左对齐 */
+    display: inline-block;
+    text-align: left;
 }
 
 .tasks li {
@@ -120,21 +121,22 @@ header {
     font-size: 18px;
 }
 
-/* 复选框样式 */
+/* 任务完成状态的复选框 */
 .tasks input[type="checkbox"] {
     width: 16px;
     height: 16px;
     margin-right: 10px;
 }
 
+/* 新建任务按钮居中显示 */
 .add-task-button {
     display: block;
-    margin: 5px auto 0;   /* 左右自动居中 */
+    margin: 5px auto 0;
     border: none;
     font-weight: bold;
 }
 
-/* 删除线 */
+/* 已完成任务的文字样式 */
 .line-through {
     text-decoration: line-through;
     color: #999;
