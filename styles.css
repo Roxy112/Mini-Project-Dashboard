@@ -87,6 +87,7 @@ header {
 /* My project 样式 */
 .projects {
     margin-bottom: 40px;
+    justify-content: center;
     text-align: center;
 }
 
@@ -97,6 +98,7 @@ header {
 .project-buttons {
     display: flex;
     justify-content: center;
+    align-items: center;
     gap: 20px;
 }
 
