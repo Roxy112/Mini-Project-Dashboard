@@ -114,11 +114,30 @@ header {
 .tasks ul {
     display: inline-block;
     text-align: left;
+    width: 350px;
 }
 
 .tasks li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 15px;
     font-size: 18px;
+}
+
+/* 使用 Flexbox 布局让文本和按钮分布，保持按钮上下对齐 */
+.tasks label {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.tasks .item-task {
+    flex-grow: 1;
+    word-break: break-word; /* 让长文本自动换行 */
+    min-width: 0; /* 防止文本超出 flex 容器 */
+    padding-right: 10px; /* 在文本和按钮之间增加一点间隙，防止换行时贴得太近 */
 }
 
 /* 任务完成状态的复选框 */
@@ -126,6 +145,7 @@ header {
     width: 16px;
     height: 16px;
     margin-right: 10px;
+    flex-shrink: 0; /* 防止复选框被压缩 */
 }
 
 /* 新建任务按钮居中显示 */
@@ -140,4 +160,25 @@ header {
 .line-through {
     text-decoration: line-through;
     color: #999;
+}
+
+/* 删除按钮的样式 */
+.delete-task {
+    color: #ef4444;
+    background-color: transparent;
+    border: 1px solid #ef4444;
+    border-radius: 6px;
+    margin-left: 10px;
+    cursor: pointer;
+    padding: 4px 10px;
+    font-size: 14px;
+    font-weight: 500;
+    flex-shrink: 0; /* 防止按钮被压缩 */
+    transition: all 0.2s ease-in-out;
+}
+
+.delete-task:hover {
+    background-color: #ef4444;
+    color: white;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
 }

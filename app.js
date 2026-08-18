@@ -1,104 +1,114 @@
-// 任务数据
-let tasks = [
+// 默认任务列表
+const DefaultTasks = [
     { id: 1, text: 'Learn JavaScript', done: false },
     { id: 2, text: 'Build Dashboard', done: false },
     { id: 3, text: 'Learn Git', done: false },
 ];
 
-// 获取任务列表容器
+// 获取本地任务，无则返回默认
+function getTasks() {
+    const storageTasks = localStorage.getItem('task-list');
+    return storageTasks ? JSON.parse(storageTasks) : DefaultTasks;
+}
+
+// 保存任务到本地
+function saveTasks() {
+    localStorage.setItem('task-list', JSON.stringify(tasks));
+}
+
+// 根据 id 删除任务
+function deleteTask(id) {
+    tasks = tasks.filter(task => task.id !== id);
+    saveTasks();
+    renderTasks();
+}
+
+// 初始化任务数据
+let tasks = getTasks();
 const taskList = document.querySelector('.tasks ul');
 
-// 根据 tasks 数组重新生成任务列表
+// 渲染任务列表
 function renderTasks() {
     taskList.innerHTML = '';
-
-    // 在内存中创建一个文档片段
     const fragment = document.createDocumentFragment();
 
     tasks.forEach(task => {
-        // 创建每个任务需要的列表和标签容器
         const li = document.createElement('li');
         const label = document.createElement('label');
 
-        // 创建复选框，并根据任务状态设置是否勾选
+        // 复选框
         const input = document.createElement('input');
         input.type = 'checkbox';
         input.className = 'item-check';
         input.dataset.id = task.id;
         input.checked = task.done;
 
-        // 创建任务文字；已完成的任务添加删除线样式
+        // 任务文本
         const span = document.createElement('span');
         span.className = 'item-task';
-        if (task.done) {
-            span.classList.add('line-through');
-        }
-
+        if (task.done) span.classList.add('line-through');
         span.textContent = task.text;
 
-        // 组装每一项任务的 DOM 结构
-        label.append(input, span);
-        li.append(label);
+        // 删除按钮
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'delete';
+        deleteBtn.className = 'delete-task';
+        deleteBtn.dataset.id = task.id;
 
-        // 先添加到文档片段，减少多次操作页面 DOM
+        // 组装 DOM
+        label.append(input, span);
+        li.append(label, deleteBtn);
         fragment.appendChild(li);
     });
 
-    // 一次性将所有节点挂载到页面
     taskList.appendChild(fragment);
 }
 
 renderTasks();
 
-// 监听任务列表中复选框的状态变化
+// 监听复选框状态变化
 taskList.addEventListener('change', function (event) {
-    // 只处理任务复选框触发的 change 事件
     if (event.target.classList.contains('item-check')) {
-        // 获取当前复选框对应任务的 id
-        const taskId = event.target.dataset.id;
-
-        // 在任务数组中找到对应任务
-        const currentTask = tasks.find(t => t.id === Number(taskId));
+        const taskId = Number(event.target.dataset.id);
+        const currentTask = tasks.find(t => t.id === taskId);
 
         if (currentTask) {
-            // 同步更新任务完成状态
             currentTask.done = event.target.checked;
+            saveTasks();
         }
-
-        // 重新渲染，让删除线样式与最新状态保持一致
         renderTasks();
     }
 });
 
-// 获取新建任务表单和输入框
+// 监听删除按钮点击
+taskList.addEventListener('click', function (event) {
+    if (event.target.classList.contains('delete-task')) {
+        deleteTask(Number(event.target.dataset.id));
+    }
+});
+
+// 获取表单元素
 const taskForm = document.querySelector('.tasks form');
 const taskInput = document.getElementById('new-task-input');
 
-// 监听表单提交：点击按钮或在输入框按 Enter 都会触发
+// 监听新增任务提交
 taskForm.addEventListener('submit', function (event) {
-    // 阻止表单默认提交导致的页面刷新
     event.preventDefault();
-
-    // 获取并清理输入内容两侧的空格
     const taskText = taskInput.value.trim();
 
-    if (taskText === '') {
+    if (!taskText) {
         alert('请输入任务内容！');
         return;
     }
 
-    // 创建新任务并加入任务数组
-    const newTask = {
+    tasks.push({
         id: Date.now(),
         text: taskText,
         done: false,
-    };
-    tasks.push(newTask);
+    });
 
-    // 重新渲染任务列表
+    saveTasks();
     renderTasks();
-
-    // 清空输入框，方便继续添加任务
     taskInput.value = '';
 });
 
