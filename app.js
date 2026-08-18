@@ -8,7 +8,8 @@ const DefaultTasks = [
 // 获取本地任务，无则返回默认
 function getTasks() {
     const storageTasks = localStorage.getItem('task-list');
-    return storageTasks ? JSON.parse(storageTasks) : DefaultTasks;
+    
+    return storageTasks ? JSON.parse(storageTasks) : structuredClone(DefaultTasks);
 }
 
 // 保存任务到本地
