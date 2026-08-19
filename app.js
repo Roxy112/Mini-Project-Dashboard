@@ -42,12 +42,12 @@ projectButtons.addEventListener('click', function (event) {
         renderTasks();
     } else if (event.target.classList.contains('delete-project-btn')) {
         const id = Number(event.target.dataset.id);
-        if (!confirm('Are you sure you want to delete this project and all its tasks?')) return;
+        if (!confirm('确认删除这个项目以及它的所有任务吗？')) return;
 
         projects = deleteProject(projects, id);
         saveProjects(projects);
 
-        // Remove associated tasks
+        // 删除该项目关联的所有任务
         tasks = tasks.filter(t => t.projectID !== id);
         saveTasks(tasks);
 
@@ -135,6 +135,12 @@ function renderTasks() {
         if (task.done) span.classList.add('line-through');
         span.textContent = task.text;
 
+        // 任务优先级标签
+        const priorityBadge = document.createElement('span');
+        const prio = task.priority || 'medium';
+        priorityBadge.textContent = prio.toUpperCase();
+        priorityBadge.className = `priority-badge prio-${prio}`;
+
         // 编辑按钮
         const editBtn = document.createElement('button');
         editBtn.textContent = 'edit';
@@ -152,7 +158,7 @@ function renderTasks() {
         actionDiv.append(editBtn, deleteBtn);
 
         // 组装 DOM
-        label.append(input, span);
+        label.append(input, span, priorityBadge);
         li.append(label, actionDiv);
         fragment.appendChild(li);
     });
@@ -186,7 +192,7 @@ taskList.addEventListener('click', function (event) {
     } else if (event.target.classList.contains('edit-task')) {
         const id = Number(event.target.dataset.id);
         const currentTask = tasks.find(t => t.id === id);
-        
+
         if (currentTask) {
             const newText = prompt('编辑任务:', currentTask.text);
             // 确保用户没有点击取消，并且输入了非空字符
@@ -209,6 +215,7 @@ taskForm.addEventListener('submit', function (event) {
     }
 
     const taskText = taskInput.value.trim();
+    const taskPrioritySelect = document.getElementById('new-task-priority').value;
 
     if (!taskText) {
         alert('请输入任务内容！');
@@ -219,7 +226,8 @@ taskForm.addEventListener('submit', function (event) {
         id: Date.now(),
         text: taskText,
         done: false,
-        projectID: activeProjectId
+        projectID: activeProjectId,
+        priority: taskPrioritySelect
     });
 
     saveTasks(tasks);
