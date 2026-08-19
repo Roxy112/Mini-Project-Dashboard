@@ -43,10 +43,10 @@ projectButtons.addEventListener('click', function (event) {
     } else if (event.target.classList.contains('delete-project-btn')) {
         const id = Number(event.target.dataset.id);
         if (!confirm('Are you sure you want to delete this project and all its tasks?')) return;
-        
+
         projects = deleteProject(projects, id);
         saveProjects(projects);
-        
+
         // Remove associated tasks
         tasks = tasks.filter(t => t.projectID !== id);
         saveTasks(tasks);
@@ -54,7 +54,7 @@ projectButtons.addEventListener('click', function (event) {
         if (activeProjectId === id) {
             activeProjectId = projects.length > 0 ? projects[0].id : null;
         }
-        
+
         renderProjects();
         renderTasks();
     }
@@ -81,10 +81,10 @@ projectForm.addEventListener('submit', function (event) {
 
     projects.push(newProject);
     saveProjects(projects);
-    
+
     // 自动切换到新项目
     activeProjectId = newProject.id;
-    
+
     renderProjects();
     renderTasks();
     projectInput.value = '';
@@ -93,11 +93,28 @@ projectForm.addEventListener('submit', function (event) {
 // 初始化任务数据
 let tasks = getTasks();
 const taskList = document.querySelector('.tasks ul');
+const taskForm = document.querySelector('.tasks form');
+const taskInput = document.getElementById('new-task-input');
+const taskSubmitBtn = taskForm.querySelector('button[type="submit"]');
 
 // 渲染任务列表
 function renderTasks() {
     taskList.innerHTML = '';
     const fragment = document.createDocumentFragment();
+
+    if (!activeProjectId) {
+        taskInput.disabled = true;
+        taskInput.placeholder = '请先添加或选择一个项目';
+        taskSubmitBtn.disabled = true;
+        taskSubmitBtn.style.opacity = '0.5';
+        taskSubmitBtn.style.cursor = 'not-allowed';
+    } else {
+        taskInput.disabled = false;
+        taskInput.placeholder = '请输入新任务';
+        taskSubmitBtn.disabled = false;
+        taskSubmitBtn.style.opacity = '1';
+        taskSubmitBtn.style.cursor = 'pointer';
+    }
 
     const filteredTasks = tasks.filter(task => task.projectID === activeProjectId);
 
@@ -159,13 +176,15 @@ taskList.addEventListener('click', function (event) {
     }
 });
 
-// 获取表单元素
-const taskForm = document.querySelector('.tasks form');
-const taskInput = document.getElementById('new-task-input');
-
 // 监听新增任务提交
 taskForm.addEventListener('submit', function (event) {
     event.preventDefault();
+
+    if (!activeProjectId) {
+        alert('请先添加或选择一个项目！');
+        return;
+    }
+
     const taskText = taskInput.value.trim();
 
     if (!taskText) {
