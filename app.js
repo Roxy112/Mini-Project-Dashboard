@@ -135,15 +135,25 @@ function renderTasks() {
         if (task.done) span.classList.add('line-through');
         span.textContent = task.text;
 
+        // 编辑按钮
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'edit';
+        editBtn.className = 'edit-task';
+        editBtn.dataset.id = task.id;
+
         // 删除按钮
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'delete';
         deleteBtn.className = 'delete-task';
         deleteBtn.dataset.id = task.id;
 
+        const actionDiv = document.createElement('div');
+        actionDiv.className = 'task-actions';
+        actionDiv.append(editBtn, deleteBtn);
+
         // 组装 DOM
         label.append(input, span);
-        li.append(label, deleteBtn);
+        li.append(label, actionDiv);
         fragment.appendChild(li);
     });
 
@@ -166,13 +176,26 @@ taskList.addEventListener('change', function (event) {
     }
 });
 
-// 监听删除按钮点击
+// 监听删除和编辑按钮点击
 taskList.addEventListener('click', function (event) {
     if (event.target.classList.contains('delete-task')) {
         const id = Number(event.target.dataset.id);
         tasks = deleteTask(tasks, id);
         saveTasks(tasks);
         renderTasks();
+    } else if (event.target.classList.contains('edit-task')) {
+        const id = Number(event.target.dataset.id);
+        const currentTask = tasks.find(t => t.id === id);
+        
+        if (currentTask) {
+            const newText = prompt('编辑任务:', currentTask.text);
+            // 确保用户没有点击取消，并且输入了非空字符
+            if (newText !== null && newText.trim() !== '') {
+                currentTask.text = newText.trim();
+                saveTasks(tasks);
+                renderTasks();
+            }
+        }
     }
 });
 
