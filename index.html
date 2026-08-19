@@ -1,63 +1,69 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <link rel="stylesheet" href="./styles.css">
-    <meta charset="UTF-8">
-    <title>Mini Project Dashboard</title>
-    <script type="module" src="./app.js"></script>
-  </head>
-  <body>
-    <div class="layout-wrapper">
-      <!-- 1. 页头区域 -->
-      <header>
-        <h1>ProjectFlow</h1>
-        <div class="user-profile">
-          <h2>Elena</h2>
-          <img src="gear-icon.png" alt="setting">
-        </div>
-      </header>
 
-      <hr>
+<head>
+  <link rel="stylesheet" href="./styles.css">
+  <meta charset="UTF-8">
+  <title>Mini Project Dashboard</title>
+  <script src="./store.js" defer></script>
+  <script src="./app.js" defer></script>
+</head>
 
-      <div class="content-wrapper">
-        <!-- 2. 侧边导航区域 -->
-        <aside class="sidebar">
-          <nav>
-            <ul>
-              <li><button>Dashboard</button></li>
-              <li><button>Projects</button></li>
-              <li><button>Tasks</button></li>
-              <li><button>Settings</button></li>
-            </ul>
-          </nav>
-        </aside>
-
-        <!-- 3. 主要内容区域 -->
-        <main class="main-content">
-          <!-- 项目区域 -->
-          <section class="projects">
-            <h3>My Projects</h3>
-            <div class="project-buttons">
-              <button>Project A</button>
-              <button>Project B</button>
-            </div>
-          </section>
-
-          <!-- 任务区域 -->
-          <section class="tasks">
-            <h3>Recent Tasks</h3>
-            <ul></ul>
-
-            <br>
-
-            <!-- 新建任务表单 -->
-            <form>
-              <input type="text" id="new-task-input" placeholder="请输入新任务">
-              <button type="submit" class="add-task-button">+ Add Task</button>
-            </form>
-          </section>
-        </main>
+<body>
+  <div class="layout-wrapper">
+    <!-- 1. 页头区域 -->
+    <header>
+      <h1>ProjectFlow</h1>
+      <div class="user-profile">
+        <h2>Elena</h2>
+        <img src="gear-icon.png" alt="setting">
       </div>
+    </header>
+
+    <hr>
+
+    <div class="content-wrapper">
+      <!-- 2. 侧边导航区域 -->
+      <aside class="sidebar">
+        <nav>
+          <ul>
+            <li><button>Dashboard</button></li>
+            <li><button>Projects</button></li>
+            <li><button>Tasks</button></li>
+            <li><button>Settings</button></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- 3. 主要内容区域 -->
+      <main class="main-content">
+        <!-- 项目区域 -->
+        <section class="projects">
+          <h3>My Projects</h3>
+          <div class="project-buttons">
+
+          </div>
+          <!-- 新建项目表单 -->
+          <form id="new-project-form">
+            <input type="text" id="new-project-input" placeholder="请输入新项目">
+            <button type="submit" class="add-project-button">+ Add Project</button>
+          </form>
+        </section>
+
+        <!-- 任务区域 -->
+        <section class="tasks">
+          <h3>Recent Tasks</h3>
+          <ul></ul>
+
+          <!-- 新建任务表单 -->
+          <form>
+            <input type="text" id="new-task-input" placeholder="请输入新任务">
+            <button type="submit" class="add-task-button">+ Add Task</button>
+          </form>
+        </section>
+      </main>
     </div>
-  </body>
+  </div>
+</body>
+
 </html>
