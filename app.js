@@ -1,28 +1,4 @@
-// 默认任务列表
-const DefaultTasks = [
-    { id: 1, text: 'Learn JavaScript', done: false },
-    { id: 2, text: 'Build Dashboard', done: false },
-    { id: 3, text: 'Learn Git', done: false },
-];
-
-// 获取本地任务，无则返回默认
-function getTasks() {
-    const storageTasks = localStorage.getItem('task-list');
-    
-    return storageTasks ? JSON.parse(storageTasks) : structuredClone(DefaultTasks);
-}
-
-// 保存任务到本地
-function saveTasks() {
-    localStorage.setItem('task-list', JSON.stringify(tasks));
-}
-
-// 根据 id 删除任务
-function deleteTask(id) {
-    tasks = tasks.filter(task => task.id !== id);
-    saveTasks();
-    renderTasks();
-}
+import { getTasks, saveTasks, deleteTask } from './store.js';
 
 // 初始化任务数据
 let tasks = getTasks();
@@ -75,7 +51,7 @@ taskList.addEventListener('change', function (event) {
 
         if (currentTask) {
             currentTask.done = event.target.checked;
-            saveTasks();
+            saveTasks(tasks);
         }
         renderTasks();
     }
@@ -84,7 +60,10 @@ taskList.addEventListener('change', function (event) {
 // 监听删除按钮点击
 taskList.addEventListener('click', function (event) {
     if (event.target.classList.contains('delete-task')) {
-        deleteTask(Number(event.target.dataset.id));
+        const id = Number(event.target.dataset.id);
+        tasks = deleteTask(tasks, id);
+        saveTasks(tasks);
+        renderTasks();
     }
 });
 
@@ -108,7 +87,7 @@ taskForm.addEventListener('submit', function (event) {
         done: false,
     });
 
-    saveTasks();
+    saveTasks(tasks);
     renderTasks();
     taskInput.value = '';
 });
