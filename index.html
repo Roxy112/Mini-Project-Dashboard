@@ -25,14 +25,35 @@
     <div class="content-wrapper">
       <!-- 2. 侧边导航区域 -->
       <aside class="sidebar">
-        <nav>
-          <ul>
-            <li><button>Dashboard</button></li>
-            <li><button>Projects</button></li>
-            <li><button>Tasks</button></li>
-            <li><button>Settings</button></li>
-          </ul>
-        </nav>
+        <h3>ProjectFlow Dashboard</h3>
+        <div class="stats-container">
+          <div class="stat-card">
+            <span class="stat-label">Projects</span>
+            <span class="stat-value" id="stat-projects">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Tasks</span>
+            <span class="stat-value" id="stat-tasks">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Completed</span>
+            <span class="stat-value" id="stat-completed">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Pending</span>
+            <span class="stat-value" id="stat-pending">0</span>
+          </div>
+
+          <div class="progress-section">
+            <div class="progress-header">
+              <span>Completion Rate</span>
+              <span id="stat-rate-text">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="stat-rate-bar" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
       </aside>
 
       <!-- 3. 主要内容区域 -->
