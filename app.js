@@ -1,5 +1,5 @@
 // 初始化项目数据
-let projects = getProjects() || [];
+let projects = getProjects();
 let activeProjectId = (projects && projects.length > 0) ? projects[0].id : null;
 const projectButtons = document.querySelector('.project-buttons');
 
@@ -13,7 +13,7 @@ function renderProjects() {
         wrapper.className = 'project-item-wrapper';
 
         const button = document.createElement('button');
-        button.textContent = project.text;
+        button.textContent = project.name;
         button.className = 'project-btn';
         button.dataset.id = project.id;
         if (project.id === activeProjectId) {
@@ -21,7 +21,7 @@ function renderProjects() {
         }
 
         const delBtn = document.createElement('button');
-        delBtn.textContent = '×';
+        delBtn.textContent = 'x';
         delBtn.className = 'delete-project-btn';
         delBtn.dataset.id = project.id;
 
@@ -48,7 +48,7 @@ projectButtons.addEventListener('click', function (event) {
         saveProjects(projects);
 
         // 删除该项目关联的所有任务
-        tasks = tasks.filter(t => t.projectID !== id);
+        tasks = tasks.filter(t => t.projectId !== id);
         saveTasks(tasks);
 
         if (activeProjectId === id) {
@@ -76,7 +76,7 @@ projectForm.addEventListener('submit', function (event) {
 
     const newProject = {
         id: Date.now(),
-        text: projectName
+        name: projectName
     };
 
     projects.push(newProject);
@@ -90,12 +90,26 @@ projectForm.addEventListener('submit', function (event) {
     projectInput.value = '';
 });
 
+// 获取当日日期
+function getTodayDateString() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// 设置默认显示当日任务
+const taskDate = document.getElementById('new-task-date');
+taskDate.value = getTodayDateString();
+
 // 初始化任务数据
 let tasks = getTasks();
 const taskList = document.querySelector('.tasks ul');
 const taskForm = document.querySelector('.tasks form');
 const taskInput = document.getElementById('new-task-input');
 const taskSubmitBtn = taskForm.querySelector('button[type="submit"]');
+const taskPriority = document.getElementById('new-task-priority');
 
 // 渲染任务列表
 function renderTasks() {
@@ -108,15 +122,27 @@ function renderTasks() {
         taskSubmitBtn.disabled = true;
         taskSubmitBtn.style.opacity = '0.5';
         taskSubmitBtn.style.cursor = 'not-allowed';
+        taskPriority.disabled = true;
+        taskPriority.style.opacity = '0.5';
+        taskPriority.style.cursor = 'not-allowed';
+        taskDate.disabled = true;
+        taskDate.style.opacity = '0.5';
+        taskDate.style.cursor = 'not-allowed';
     } else {
         taskInput.disabled = false;
         taskInput.placeholder = '请输入新任务';
         taskSubmitBtn.disabled = false;
         taskSubmitBtn.style.opacity = '1';
         taskSubmitBtn.style.cursor = 'pointer';
+        taskPriority.disabled = false;
+        taskPriority.style.opacity = '1';
+        taskPriority.style.cursor = 'pointer';
+        taskDate.disabled = false;
+        taskDate.style.opacity = '1';
+        taskDate.style.cursor = 'pointer';
     }
 
-    const filteredTasks = tasks.filter(task => task.projectID === activeProjectId);
+    const filteredTasks = tasks.filter(task => task.projectId === activeProjectId);
 
     filteredTasks.forEach(task => {
         const li = document.createElement('li');
@@ -157,8 +183,25 @@ function renderTasks() {
         actionDiv.className = 'task-actions';
         actionDiv.append(editBtn, deleteBtn);
 
+        // 截至时间
+        let dateBadge = '';
+        if (task.dueDate) {
+            const parts = task.dueDate.split('-');
+            if (parts.length === 3) {
+                const monthIndex = parseInt(parts[1], 10) - 1;
+                const day = parseInt(parts[2], 10);
+                const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                const dateSpan = document.createElement('span');
+                dateSpan.className = 'task-date-badge';
+                dateSpan.textContent = `${monthNames[monthIndex]} ${day}`;
+                dateBadge = dateSpan;
+            }
+        }
+
         // 组装 DOM
-        label.append(input, span, priorityBadge);
+        label.append(input, span);
+        if (dateBadge) label.append(dateBadge);
+        label.append(priorityBadge);
         li.append(label, actionDiv);
         fragment.appendChild(li);
     });
@@ -215,23 +258,27 @@ taskForm.addEventListener('submit', function (event) {
     }
 
     const taskText = taskInput.value.trim();
-    const taskPrioritySelect = document.getElementById('new-task-priority').value;
 
     if (!taskText) {
         alert('请输入任务内容！');
         return;
     }
 
+    const taskPrioritySelect = taskPriority.value;
+    const taskDateValue = taskDate.value;
+
     tasks.push({
         id: Date.now(),
         text: taskText,
         done: false,
-        projectID: activeProjectId,
-        priority: taskPrioritySelect
+        projectId: activeProjectId,
+        priority: taskPrioritySelect,
+        dueDate: taskDateValue
     });
 
     saveTasks(tasks);
     renderTasks();
     taskInput.value = '';
+    taskDate.value = getTodayDateString();
 });
 

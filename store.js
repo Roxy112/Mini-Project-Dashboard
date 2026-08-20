@@ -1,8 +1,8 @@
 // 默认任务列表
 const DefaultTasks = [
-    { id: 1, text: 'Learn JavaScript', done: false, projectID: 1, priority: 'medium' },
-    { id: 2, text: 'Build Dashboard', done: false, projectID: 1, priority: 'medium' },
-    { id: 3, text: 'Learn Git', done: false, projectID: 1, priority: 'medium' },
+    { id: 1, text: 'Learn JavaScript', done: false, projectId: 1, priority: 'medium' },
+    { id: 2, text: 'Build Dashboard', done: false, projectId: 1, priority: 'medium' },
+    { id: 3, text: 'Learn Git', done: false, projectId: 1, priority: 'medium' },
 ];
 
 // 获取本地任务，无则返回默认
@@ -35,8 +35,8 @@ function deleteTask(tasks, id) {
 
 // 默认项目列表 
 const DefaultProjects = [
-    { id: 1, text: 'Project A' },
-    { id: 2, text: 'Project B' },
+    { id: 1, name: 'Project A' },
+    { id: 2, name: 'Project B' },
 ]
 
 // 获取本地项目，无则返回默认
