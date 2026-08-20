@@ -111,6 +111,23 @@ const taskInput = document.getElementById('new-task-input');
 const taskSubmitBtn = taskForm.querySelector('button[type="submit"]');
 const taskPriority = document.getElementById('new-task-priority');
 
+// 任务筛选状态
+let currentStatusFilter = 'all';
+let currentPriorityFilter = 'all';
+
+const filterStatusSelect = document.getElementById('filter-status');
+const filterPrioritySelect = document.getElementById('filter-priority');
+
+filterStatusSelect.addEventListener('change', function(event) {
+    currentStatusFilter = event.target.value;
+    renderTasks();
+});
+
+filterPrioritySelect.addEventListener('change', function(event) {
+    currentPriorityFilter = event.target.value;
+    renderTasks();
+});
+
 // 渲染任务列表
 function renderTasks() {
     taskList.innerHTML = '';
@@ -119,30 +136,46 @@ function renderTasks() {
     if (!activeProjectId) {
         taskInput.disabled = true;
         taskInput.placeholder = '请先添加或选择一个项目';
+
         taskSubmitBtn.disabled = true;
         taskSubmitBtn.style.opacity = '0.5';
         taskSubmitBtn.style.cursor = 'not-allowed';
+
         taskPriority.disabled = true;
         taskPriority.style.opacity = '0.5';
         taskPriority.style.cursor = 'not-allowed';
+
         taskDate.disabled = true;
         taskDate.style.opacity = '0.5';
         taskDate.style.cursor = 'not-allowed';
     } else {
         taskInput.disabled = false;
         taskInput.placeholder = '请输入新任务';
+
         taskSubmitBtn.disabled = false;
         taskSubmitBtn.style.opacity = '1';
         taskSubmitBtn.style.cursor = 'pointer';
+
         taskPriority.disabled = false;
         taskPriority.style.opacity = '1';
         taskPriority.style.cursor = 'pointer';
+        
         taskDate.disabled = false;
         taskDate.style.opacity = '1';
         taskDate.style.cursor = 'pointer';
     }
 
-    const filteredTasks = tasks.filter(task => task.projectId === activeProjectId);
+    let filteredTasks = tasks.filter(task => task.projectId === activeProjectId);
+
+    if (currentStatusFilter === 'active') {
+        filteredTasks = filteredTasks.filter(t => !t.done);
+    } else if (currentStatusFilter === 'completed') {
+        filteredTasks = filteredTasks.filter(t => t.done);
+    }
+
+    if (currentPriorityFilter !== 'all') {
+        filteredTasks = filteredTasks.filter(t => t.priority === currentPriorityFilter);
+    }
 
     filteredTasks.forEach(task => {
         const li = document.createElement('li');

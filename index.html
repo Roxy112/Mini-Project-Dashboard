@@ -52,7 +52,22 @@
 
         <!-- 任务区域 -->
         <section class="tasks">
-          <h3>Recent Tasks</h3>
+          <div class="tasks-header">
+            <h3>Recent Tasks</h3>
+            <div class="task-filters">
+              <select id="filter-status">
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+              </select>
+              <select id="filter-priority">
+                <option value="all">All Priorities</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+          </div>
           <ul></ul>
 
           <!-- 新建任务表单 -->
