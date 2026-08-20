@@ -1,103 +1,19 @@
-// 初始化项目数据
-let projects = getProjects();
-let activeProjectId = (projects && projects.length > 0) ? projects[0].id : null;
-const projectButtons = document.querySelector('.project-buttons');
+import { getTasks, saveTasks, deleteTask } from './store.js';
+import { activeProjectId } from './projects.js';
+import { updateDashboardStats } from './app.js';
 
-// 初始化任务数据
-let tasks = getTasks();
+export let tasks = getTasks();
+
+export function deleteTasksByProjectId(projectId) {
+    tasks = tasks.filter(t => t.projectId !== projectId);
+    saveTasks(tasks);
+}
+
 const taskList = document.querySelector('.tasks ul');
 const taskForm = document.querySelector('.tasks form');
 const taskInput = document.getElementById('new-task-input');
 const taskSubmitBtn = taskForm.querySelector('button[type="submit"]');
 const taskPriority = document.getElementById('new-task-priority');
-
-// 渲染项目列表
-function renderProjects() {
-    projectButtons.innerHTML = '';
-    const fragment = document.createDocumentFragment();
-
-    projects.forEach(project => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'project-item-wrapper';
-
-        const button = document.createElement('button');
-        button.textContent = project.name;
-        button.className = 'project-btn';
-        button.dataset.id = project.id;
-        if (project.id === activeProjectId) {
-            button.classList.add('active');
-        }
-
-        const delBtn = document.createElement('button');
-        delBtn.textContent = 'x';
-        delBtn.className = 'delete-project-btn';
-        delBtn.dataset.id = project.id;
-
-        wrapper.append(button, delBtn);
-        fragment.appendChild(wrapper);
-    });
-
-    projectButtons.appendChild(fragment);
-    updateDashboardStats();
-}
-
-renderProjects();
-
-// 监听项目点击切换当前项目
-projectButtons.addEventListener('click', function (event) {
-    if (event.target.classList.contains('project-btn')) {
-        activeProjectId = Number(event.target.dataset.id);
-        renderProjects();
-        renderTasks();
-    } else if (event.target.classList.contains('delete-project-btn')) {
-        const id = Number(event.target.dataset.id);
-        if (!confirm('确认删除这个项目以及它的所有任务吗？')) return;
-
-        projects = deleteProject(projects, id);
-        saveProjects(projects);
-
-        // 删除该项目关联的所有任务
-        tasks = tasks.filter(t => t.projectId !== id);
-        saveTasks(tasks);
-
-        if (activeProjectId === id) {
-            activeProjectId = projects.length > 0 ? projects[0].id : null;
-        }
-
-        renderProjects();
-        renderTasks();
-    }
-});
-
-// 获取新建项目表单元素
-const projectForm = document.getElementById('new-project-form');
-const projectInput = document.getElementById('new-project-input');
-
-// 监听新增项目提交
-projectForm.addEventListener('submit', function (event) {
-    event.preventDefault();
-    const projectName = projectInput.value.trim();
-
-    if (!projectName) {
-        alert('请输入项目名称！');
-        return;
-    }
-
-    const newProject = {
-        id: Date.now(),
-        name: projectName
-    };
-
-    projects.push(newProject);
-    saveProjects(projects);
-
-    // 自动切换到新项目
-    activeProjectId = newProject.id;
-
-    renderProjects();
-    renderTasks();
-    projectInput.value = '';
-});
 
 // 获取当日日期
 function getTodayDateString() {
@@ -130,7 +46,7 @@ filterPrioritySelect.addEventListener('change', function (event) {
 });
 
 // 渲染任务列表
-function renderTasks() {
+export function renderTasks() {
     taskList.innerHTML = '';
     const fragment = document.createDocumentFragment();
 
@@ -244,8 +160,6 @@ function renderTasks() {
     updateDashboardStats();
 }
 
-renderTasks();
-
 // 监听复选框状态变化
 taskList.addEventListener('change', function (event) {
     if (event.target.classList.contains('item-check')) {
@@ -316,32 +230,3 @@ taskForm.addEventListener('submit', function (event) {
     taskInput.value = '';
     taskDate.value = getTodayDateString();
 });
-
-// 更新 Dashboard 统计数据
-function updateDashboardStats() {
-    const totalProjects = projects.length;
-    const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(t => t.done).length;
-    const pendingTasks = totalTasks - completedTasks;
-
-    const completionRate = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
-
-    const statProjectsEl = document.getElementById('stat-projects');
-    if (statProjectsEl) statProjectsEl.textContent = totalProjects;
-
-    const statTasksEl = document.getElementById('stat-tasks');
-    if (statTasksEl) statTasksEl.textContent = totalTasks;
-
-    const statCompletedEl = document.getElementById('stat-completed');
-    if (statCompletedEl) statCompletedEl.textContent = completedTasks;
-
-    const statPendingEl = document.getElementById('stat-pending');
-    if (statPendingEl) statPendingEl.textContent = pendingTasks;
-
-    const statRateTextEl = document.getElementById('stat-rate-text');
-    if (statRateTextEl) statRateTextEl.textContent = `${completionRate}%`;
-
-    const statRateBarEl = document.getElementById('stat-rate-bar');
-    if (statRateBarEl) statRateBarEl.style.width = `${completionRate}%`;
-}
-
