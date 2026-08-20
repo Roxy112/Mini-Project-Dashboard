@@ -3,6 +3,14 @@ let projects = getProjects();
 let activeProjectId = (projects && projects.length > 0) ? projects[0].id : null;
 const projectButtons = document.querySelector('.project-buttons');
 
+// 初始化任务数据
+let tasks = getTasks();
+const taskList = document.querySelector('.tasks ul');
+const taskForm = document.querySelector('.tasks form');
+const taskInput = document.getElementById('new-task-input');
+const taskSubmitBtn = taskForm.querySelector('button[type="submit"]');
+const taskPriority = document.getElementById('new-task-priority');
+
 // 渲染项目列表
 function renderProjects() {
     projectButtons.innerHTML = '';
@@ -30,6 +38,7 @@ function renderProjects() {
     });
 
     projectButtons.appendChild(fragment);
+    updateDashboardStats();
 }
 
 renderProjects();
@@ -103,14 +112,6 @@ function getTodayDateString() {
 const taskDate = document.getElementById('new-task-date');
 taskDate.value = getTodayDateString();
 
-// 初始化任务数据
-let tasks = getTasks();
-const taskList = document.querySelector('.tasks ul');
-const taskForm = document.querySelector('.tasks form');
-const taskInput = document.getElementById('new-task-input');
-const taskSubmitBtn = taskForm.querySelector('button[type="submit"]');
-const taskPriority = document.getElementById('new-task-priority');
-
 // 任务筛选状态
 let currentStatusFilter = 'all';
 let currentPriorityFilter = 'all';
@@ -118,12 +119,12 @@ let currentPriorityFilter = 'all';
 const filterStatusSelect = document.getElementById('filter-status');
 const filterPrioritySelect = document.getElementById('filter-priority');
 
-filterStatusSelect.addEventListener('change', function(event) {
+filterStatusSelect.addEventListener('change', function (event) {
     currentStatusFilter = event.target.value;
     renderTasks();
 });
 
-filterPrioritySelect.addEventListener('change', function(event) {
+filterPrioritySelect.addEventListener('change', function (event) {
     currentPriorityFilter = event.target.value;
     renderTasks();
 });
@@ -159,7 +160,7 @@ function renderTasks() {
         taskPriority.disabled = false;
         taskPriority.style.opacity = '1';
         taskPriority.style.cursor = 'pointer';
-        
+
         taskDate.disabled = false;
         taskDate.style.opacity = '1';
         taskDate.style.cursor = 'pointer';
@@ -240,6 +241,7 @@ function renderTasks() {
     });
 
     taskList.appendChild(fragment);
+    updateDashboardStats();
 }
 
 renderTasks();
@@ -314,4 +316,32 @@ taskForm.addEventListener('submit', function (event) {
     taskInput.value = '';
     taskDate.value = getTodayDateString();
 });
+
+// 更新 Dashboard 统计数据
+function updateDashboardStats() {
+    const totalProjects = projects.length;
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(t => t.done).length;
+    const pendingTasks = totalTasks - completedTasks;
+
+    const completionRate = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+
+    const statProjectsEl = document.getElementById('stat-projects');
+    if (statProjectsEl) statProjectsEl.textContent = totalProjects;
+
+    const statTasksEl = document.getElementById('stat-tasks');
+    if (statTasksEl) statTasksEl.textContent = totalTasks;
+
+    const statCompletedEl = document.getElementById('stat-completed');
+    if (statCompletedEl) statCompletedEl.textContent = completedTasks;
+
+    const statPendingEl = document.getElementById('stat-pending');
+    if (statPendingEl) statPendingEl.textContent = pendingTasks;
+
+    const statRateTextEl = document.getElementById('stat-rate-text');
+    if (statRateTextEl) statRateTextEl.textContent = `${completionRate}%`;
+
+    const statRateBarEl = document.getElementById('stat-rate-bar');
+    if (statRateBarEl) statRateBarEl.style.width = `${completionRate}%`;
+}
 
