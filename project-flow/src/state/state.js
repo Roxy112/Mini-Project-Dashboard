@@ -1,4 +1,4 @@
-import { getProjects, saveProjects, deleteProject as deleteProjectFromStore, getTasks, saveTasks, deleteTask as deleteTaskFromStore } from './store.js';
+import { getProjects, saveProjects, deleteProject as deleteProjectFromStore, getTasks, saveTasks, deleteTask as deleteTaskFromStore } from '../services/storage.js';
 
 export const state = {
     projects: getProjects(),

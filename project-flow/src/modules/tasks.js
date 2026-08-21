@@ -1,4 +1,4 @@
-import { state, addTask, updateTask, deleteTask, setFilter } from './state.js';
+import { state, addTask, updateTask, deleteTask, setFilter } from '../state/state.js';
 
 const taskList = document.querySelector('.tasks ul');
 const taskForm = document.querySelector('.tasks form');

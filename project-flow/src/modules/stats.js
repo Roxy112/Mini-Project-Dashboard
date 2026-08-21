@@ -1,4 +1,4 @@
-import { state } from './state.js';
+import { state } from '../state/state.js';
 
 // 更新 Dashboard 统计数据
 export function updateDashboardStats() {
