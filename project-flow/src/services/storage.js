@@ -37,7 +37,7 @@ export function deleteTask(tasks, id) {
 export const DefaultProjects = [
     { id: 1, name: 'Project A' },
     { id: 2, name: 'Project B' },
-]
+];
 
 // 获取本地项目，无则返回默认
 export function getProjects() {

@@ -1,4 +1,4 @@
-import { state, setActiveProjectId, addProject, deleteProject } from './state.js';
+import { state, setActiveProjectId, addProject, deleteProject } from '../state/state.js';
 
 const projectButtons = document.querySelector('.project-buttons');
 const projectForm = document.getElementById('new-project-form');
