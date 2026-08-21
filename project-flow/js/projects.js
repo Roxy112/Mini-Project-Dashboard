@@ -1,12 +1,8 @@
-import { getProjects, saveProjects, deleteProject } from './store.js';
-import { renderTasks, deleteTasksByProjectId } from './tasks.js';
-import { updateDashboardStats } from './app.js';
+import { state, setActiveProjectId, addProject, deleteProject } from './state.js';
+import { renderTasks } from './tasks.js';
+import { updateDashboardStats } from './stats.js';
 
-export let projects = getProjects();
-export let activeProjectId = (projects && projects.length > 0) ? projects[0].id : null;
 const projectButtons = document.querySelector('.project-buttons');
-
-// 获取新建项目表单元素
 const projectForm = document.getElementById('new-project-form');
 const projectInput = document.getElementById('new-project-input');
 
@@ -15,7 +11,7 @@ export function renderProjects() {
     projectButtons.innerHTML = '';
     const fragment = document.createDocumentFragment();
 
-    projects.forEach(project => {
+    state.projects.forEach(project => {
         const wrapper = document.createElement('div');
         wrapper.className = 'project-item-wrapper';
 
@@ -23,7 +19,7 @@ export function renderProjects() {
         button.textContent = project.name;
         button.className = 'project-btn';
         button.dataset.id = project.id;
-        if (project.id === activeProjectId) {
+        if (project.id === state.activeProjectId) {
             button.classList.add('active');
         }
 
@@ -43,23 +39,15 @@ export function renderProjects() {
 // 监听项目点击切换当前项目
 projectButtons.addEventListener('click', function (event) {
     if (event.target.classList.contains('project-btn')) {
-        activeProjectId = Number(event.target.dataset.id);
+        const id = Number(event.target.dataset.id);
+        setActiveProjectId(id);
         renderProjects();
         renderTasks();
     } else if (event.target.classList.contains('delete-project-btn')) {
         const id = Number(event.target.dataset.id);
         if (!confirm('确认删除这个项目以及它的所有任务吗？')) return;
 
-        projects = deleteProject(projects, id);
-        saveProjects(projects);
-
-        // 删除该项目关联的所有任务
-        deleteTasksByProjectId(id);
-
-        if (activeProjectId === id) {
-            activeProjectId = projects.length > 0 ? projects[0].id : null;
-        }
-
+        deleteProject(id);
         renderProjects();
         renderTasks();
     }
@@ -75,17 +63,7 @@ projectForm.addEventListener('submit', function (event) {
         return;
     }
 
-    const newProject = {
-        id: Date.now(),
-        name: projectName
-    };
-
-    projects.push(newProject);
-    saveProjects(projects);
-
-    // 自动切换到新项目
-    activeProjectId = newProject.id;
-
+    addProject(projectName);
     renderProjects();
     renderTasks();
     projectInput.value = '';
