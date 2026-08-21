@@ -1,11 +1,13 @@
 import { state, addTask, updateTask, deleteTask, setFilter } from './state.js';
-import { updateDashboardStats } from './stats.js';
 
 const taskList = document.querySelector('.tasks ul');
 const taskForm = document.querySelector('.tasks form');
 const taskInput = document.getElementById('new-task-input');
 const taskSubmitBtn = taskForm.querySelector('button[type="submit"]');
 const taskPriority = document.getElementById('new-task-priority');
+const taskDate = document.getElementById('new-task-date');
+const filterStatusSelect = document.getElementById('filter-status');
+const filterPrioritySelect = document.getElementById('filter-priority');
 
 // 获取当日日期
 function getTodayDateString() {
@@ -16,24 +18,7 @@ function getTodayDateString() {
     return `${year}-${month}-${day}`;
 }
 
-// 设置默认显示当日任务
-const taskDate = document.getElementById('new-task-date');
-taskDate.value = getTodayDateString();
-
-const filterStatusSelect = document.getElementById('filter-status');
-const filterPrioritySelect = document.getElementById('filter-priority');
-
-filterStatusSelect.addEventListener('change', function (event) {
-    setFilter('status', event.target.value);
-    renderTasks();
-});
-
-filterPrioritySelect.addEventListener('change', function (event) {
-    setFilter('priority', event.target.value);
-    renderTasks();
-});
-
-// 当前正在编辑的任务 ID
+// 当前正在编辑的任务 ID（局部 UI 状态）
 let editingTaskId = null;
 
 // 保存行内编辑
@@ -43,12 +28,11 @@ function saveInlineEdit(id, newText) {
         alert('任务内容不能为空！');
         return;
     }
-    updateTask(id, { text: trimmed });
     editingTaskId = null;
-    renderTasks();
+    updateTask(id, { text: trimmed });
 }
 
-// 渲染任务列表
+// 纯渲染任务列表 DOM
 export function renderTasks() {
     taskList.innerHTML = '';
     const fragment = document.createDocumentFragment();
@@ -191,7 +175,6 @@ export function renderTasks() {
     }
 
     taskList.appendChild(fragment);
-    updateDashboardStats();
 
     // 如果处于编辑状态，自动聚焦输入框并全选文本
     if (editingTaskId) {
@@ -203,60 +186,72 @@ export function renderTasks() {
     }
 }
 
-// 监听复选框状态变化
-taskList.addEventListener('change', function (event) {
-    if (event.target.classList.contains('item-check')) {
-        const taskId = Number(event.target.dataset.id);
-        updateTask(taskId, { done: event.target.checked });
-        renderTasks();
-    }
-});
+// 初始化任务模块事件监听
+export function initTasks() {
+    // 设置默认显示当日任务
+    taskDate.value = getTodayDateString();
 
-// 监听删除和编辑/保存按钮点击
-taskList.addEventListener('click', function (event) {
-    if (event.target.classList.contains('delete-task')) {
-        const id = Number(event.target.dataset.id);
-        deleteTask(id);
-        renderTasks();
-    } else if (event.target.classList.contains('edit-task')) {
-        const id = Number(event.target.dataset.id);
-        editingTaskId = id;
-        renderTasks();
-    } else if (event.target.classList.contains('save-task')) {
-        const id = Number(event.target.dataset.id);
-        const inputEl = taskList.querySelector(`.edit-task-input[data-id="${id}"]`);
-        if (inputEl) {
-            saveInlineEdit(id, inputEl.value);
-        }
-    }
-});
-
-// 监听新增任务提交
-taskForm.addEventListener('submit', function (event) {
-    event.preventDefault();
-
-    if (!state.activeProjectId) {
-        alert('请先添加或选择一个项目！');
-        return;
-    }
-
-    const taskText = taskInput.value.trim();
-
-    if (!taskText) {
-        alert('请输入任务内容！');
-        return;
-    }
-
-    const taskPrioritySelect = taskPriority.value;
-    const taskDateValue = taskDate.value;
-
-    addTask({
-        text: taskText,
-        priority: taskPrioritySelect,
-        dueDate: taskDateValue
+    // 监听筛选条件变化
+    filterStatusSelect.addEventListener('change', function (event) {
+        setFilter('status', event.target.value);
     });
 
-    renderTasks();
-    taskInput.value = '';
-    taskDate.value = getTodayDateString();
-});
+    filterPrioritySelect.addEventListener('change', function (event) {
+        setFilter('priority', event.target.value);
+    });
+
+    // 监听复选框状态变化
+    taskList.addEventListener('change', function (event) {
+        if (event.target.classList.contains('item-check')) {
+            const taskId = Number(event.target.dataset.id);
+            updateTask(taskId, { done: event.target.checked });
+        }
+    });
+
+    // 监听删除和编辑/保存按钮点击
+    taskList.addEventListener('click', function (event) {
+        if (event.target.classList.contains('delete-task')) {
+            const id = Number(event.target.dataset.id);
+            deleteTask(id);
+        } else if (event.target.classList.contains('edit-task')) {
+            const id = Number(event.target.dataset.id);
+            editingTaskId = id;
+            renderTasks();
+        } else if (event.target.classList.contains('save-task')) {
+            const id = Number(event.target.dataset.id);
+            const inputEl = taskList.querySelector(`.edit-task-input[data-id="${id}"]`);
+            if (inputEl) {
+                saveInlineEdit(id, inputEl.value);
+            }
+        }
+    });
+
+    // 监听新增任务提交
+    taskForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        if (!state.activeProjectId) {
+            alert('请先添加或选择一个项目！');
+            return;
+        }
+
+        const taskText = taskInput.value.trim();
+
+        if (!taskText) {
+            alert('请输入任务内容！');
+            return;
+        }
+
+        const taskPrioritySelect = taskPriority.value;
+        const taskDateValue = taskDate.value;
+
+        addTask({
+            text: taskText,
+            priority: taskPrioritySelect,
+            dueDate: taskDateValue
+        });
+
+        taskInput.value = '';
+        taskDate.value = getTodayDateString();
+    });
+}

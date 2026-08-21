@@ -1,12 +1,10 @@
 import { state, setActiveProjectId, addProject, deleteProject } from './state.js';
-import { renderTasks } from './tasks.js';
-import { updateDashboardStats } from './stats.js';
 
 const projectButtons = document.querySelector('.project-buttons');
 const projectForm = document.getElementById('new-project-form');
 const projectInput = document.getElementById('new-project-input');
 
-// 渲染项目列表
+// 纯渲染项目列表 DOM
 export function renderProjects() {
     projectButtons.innerHTML = '';
     const fragment = document.createDocumentFragment();
@@ -33,38 +31,34 @@ export function renderProjects() {
     });
 
     projectButtons.appendChild(fragment);
-    updateDashboardStats();
 }
 
-// 监听项目点击切换当前项目
-projectButtons.addEventListener('click', function (event) {
-    if (event.target.classList.contains('project-btn')) {
-        const id = Number(event.target.dataset.id);
-        setActiveProjectId(id);
-        renderProjects();
-        renderTasks();
-    } else if (event.target.classList.contains('delete-project-btn')) {
-        const id = Number(event.target.dataset.id);
-        if (!confirm('确认删除这个项目以及它的所有任务吗？')) return;
+// 初始化项目模块事件监听
+export function initProjects() {
+    // 监听项目点击切换当前项目与删除项目
+    projectButtons.addEventListener('click', function (event) {
+        if (event.target.classList.contains('project-btn')) {
+            const id = Number(event.target.dataset.id);
+            setActiveProjectId(id);
+        } else if (event.target.classList.contains('delete-project-btn')) {
+            const id = Number(event.target.dataset.id);
+            if (!confirm('确认删除这个项目以及它的所有任务吗？')) return;
 
-        deleteProject(id);
-        renderProjects();
-        renderTasks();
-    }
-});
+            deleteProject(id);
+        }
+    });
 
-// 监听新增项目提交
-projectForm.addEventListener('submit', function (event) {
-    event.preventDefault();
-    const projectName = projectInput.value.trim();
+    // 监听新增项目提交
+    projectForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const projectName = projectInput.value.trim();
 
-    if (!projectName) {
-        alert('请输入项目名称！');
-        return;
-    }
+        if (!projectName) {
+            alert('请输入项目名称！');
+            return;
+        }
 
-    addProject(projectName);
-    renderProjects();
-    renderTasks();
-    projectInput.value = '';
-});
+        addProject(projectName);
+        projectInput.value = '';
+    });
+}
