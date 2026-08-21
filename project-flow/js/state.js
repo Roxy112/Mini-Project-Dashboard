@@ -15,9 +15,21 @@ if (state.projects && state.projects.length > 0) {
     state.activeProjectId = state.projects[0].id;
 }
 
+// 订阅者列表与通知机制
+const listeners = [];
+
+export function subscribe(listener) {
+    listeners.push(listener);
+}
+
+function notify() {
+    listeners.forEach(fn => fn());
+}
+
 // 项目相关的状态变更方法
 export function setActiveProjectId(id) {
     state.activeProjectId = id;
+    notify();
 }
 
 export function addProject(name) {
@@ -28,6 +40,7 @@ export function addProject(name) {
     state.projects.push(newProject);
     saveProjects(state.projects);
     state.activeProjectId = newProject.id;
+    notify();
     return newProject;
 }
 
@@ -42,6 +55,7 @@ export function deleteProject(id) {
     if (state.activeProjectId === id) {
         state.activeProjectId = state.projects.length > 0 ? state.projects[0].id : null;
     }
+    notify();
 }
 
 // 任务相关的状态变更方法
@@ -56,6 +70,7 @@ export function addTask({ text, priority, dueDate }) {
     };
     state.tasks.push(newTask);
     saveTasks(state.tasks);
+    notify();
     return newTask;
 }
 
@@ -64,6 +79,7 @@ export function updateTask(id, updates) {
     if (task) {
         Object.assign(task, updates);
         saveTasks(state.tasks);
+        notify();
     }
     return task;
 }
@@ -71,11 +87,13 @@ export function updateTask(id, updates) {
 export function deleteTask(id) {
     state.tasks = deleteTaskFromStore(state.tasks, id);
     saveTasks(state.tasks);
+    notify();
 }
 
 // 筛选条件的状态变更方法
 export function setFilter(type, value) {
     if (type in state.filters) {
         state.filters[type] = value;
+        notify();
     }
 }
