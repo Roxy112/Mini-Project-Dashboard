@@ -11,29 +11,16 @@ export interface Task {
     id: number;
     text: string;
     done: boolean;
-    projectId: number | null;
+    projectId: number;
     priority: Priority;
     dueDate?: string;
 }
-
-export interface AppFilters {
-    status: StatusFilter;
-    priority: PriorityFilter;
-}
-
-export interface AppState {
-    projects: Project[];
-    tasks: Task[];
-    activeProjectId: number | null;
-    filters: AppFilters;
-}
-
-export type StateListener = () => void;
 
 export interface CreateTaskParams {
     text: string;
     priority: Priority;
     dueDate?: string;
+    projectId: number;
 }
 
-export type UpdateTaskParams = Partial<Omit<Task, 'id'>>;
+export type UpdateTaskParams = Partial<Omit<Task, 'id' | 'projectId'>>;
