@@ -30,11 +30,6 @@ export function saveTasks(tasks: Task[]): void {
     localStorage.setItem('task-list', JSON.stringify(tasks));
 }
 
-// 根据 id 删除任务
-export function deleteTask(tasks: Task[], id: number): Task[] {
-    return tasks.filter(task => task.id !== id);
-}
-
 // 默认项目列表 
 export const DefaultProjects: Project[] = [
     { id: 1, name: 'Project A' },
@@ -62,9 +57,4 @@ export function getProjects(): Project[] {
 // 保存项目到本地
 export function saveProjects(projects: Project[]): void {
     localStorage.setItem('project-list', JSON.stringify(projects));
-}
-
-// 根据 id 删除项目
-export function deleteProject(projects: Project[], id: number): Project[] {
-    return projects.filter(project => project.id !== id);
 }

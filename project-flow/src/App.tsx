@@ -4,15 +4,14 @@ import Sidebar from './components/Sidebar';
 import Projects from './components/Projects';
 import Tasks from './components/Tasks';
 import { getProjects, saveProjects, getTasks, saveTasks } from './services/storage';
-import { Project, Task, Priority, StatusFilter, PriorityFilter } from './types/index';
+import { Project, Task, CreateTaskParams, UpdateTaskParams, StatusFilter, PriorityFilter } from './types/index';
 
 export default function App(): React.JSX.Element {
   const [projects, setProjects] = useState<Project[]>(() => getProjects());
   const [tasks, setTasks] = useState<Task[]>(() => getTasks());
-  const [activeProjectId, setActiveProjectId] = useState<number | null>(() => {
-    const initial = getProjects();
-    return initial.length > 0 ? initial[0].id : null;
-  });
+  const [activeProjectId, setActiveProjectId] = useState<number | null>(() =>
+    projects[0]?.id ?? null
+  );
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('all');
   const [filterPriority, setFilterPriority] = useState<PriorityFilter>('all');
 
@@ -47,28 +46,17 @@ export default function App(): React.JSX.Element {
   };
 
   // 新增任务
-  const handleAddTask = ({
-    text,
-    priority,
-    dueDate,
-  }: {
-    text: string;
-    priority: Priority;
-    dueDate?: string;
-  }) => {
+  const handleAddTask = (params: CreateTaskParams) => {
     const newTask: Task = {
       id: Date.now(),
-      text,
       done: false,
-      projectId: activeProjectId,
-      priority,
-      dueDate,
+      ...params,
     };
     setTasks(prev => [...prev, newTask]);
   };
 
   // 更新任务（状态、文本等）
-  const handleUpdateTask = (id: number, updates: Partial<Task>) => {
+  const handleUpdateTask = (id: number, updates: UpdateTaskParams) => {
     setTasks(prev => prev.map(t => (t.id === id ? { ...t, ...updates } : t)));
   };
 
