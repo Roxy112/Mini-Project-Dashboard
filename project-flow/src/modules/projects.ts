@@ -1,11 +1,13 @@
-import { state, setActiveProjectId, addProject, deleteProject } from '../state/state.js';
+import { state, setActiveProjectId, addProject, deleteProject } from '../state/state';
 
-const projectButtons = document.querySelector('.project-buttons');
-const projectForm = document.getElementById('new-project-form');
-const projectInput = document.getElementById('new-project-input');
+const projectButtons = document.querySelector('.project-buttons') as HTMLElement | null;
+const projectForm = document.getElementById('new-project-form') as HTMLFormElement | null;
+const projectInput = document.getElementById('new-project-input') as HTMLInputElement | null;
 
 // 纯渲染项目列表 DOM
-export function renderProjects() {
+export function renderProjects(): void {
+    if (!projectButtons) return;
+
     projectButtons.innerHTML = '';
     const fragment = document.createDocumentFragment();
 
@@ -16,7 +18,7 @@ export function renderProjects() {
         const button = document.createElement('button');
         button.textContent = project.name;
         button.className = 'project-btn';
-        button.dataset.id = project.id;
+        button.dataset.id = String(project.id);
         if (project.id === state.activeProjectId) {
             button.classList.add('active');
         }
@@ -24,7 +26,7 @@ export function renderProjects() {
         const delBtn = document.createElement('button');
         delBtn.textContent = 'x';
         delBtn.className = 'delete-project-btn';
-        delBtn.dataset.id = project.id;
+        delBtn.dataset.id = String(project.id);
 
         wrapper.append(button, delBtn);
         fragment.appendChild(wrapper);
@@ -34,14 +36,19 @@ export function renderProjects() {
 }
 
 // 初始化项目模块事件监听
-export function initProjects() {
+export function initProjects(): void {
+    if (!projectButtons || !projectForm || !projectInput) return;
+
     // 监听项目点击切换当前项目与删除项目
-    projectButtons.addEventListener('click', function (event) {
-        if (event.target.classList.contains('project-btn')) {
-            const id = Number(event.target.dataset.id);
+    projectButtons.addEventListener('click', function (event: MouseEvent) {
+        const target = event.target as HTMLElement | null;
+        if (!target) return;
+
+        if (target.classList.contains('project-btn')) {
+            const id = Number(target.dataset.id);
             setActiveProjectId(id);
-        } else if (event.target.classList.contains('delete-project-btn')) {
-            const id = Number(event.target.dataset.id);
+        } else if (target.classList.contains('delete-project-btn')) {
+            const id = Number(target.dataset.id);
             if (!confirm('确认删除这个项目以及它的所有任务吗？')) return;
 
             deleteProject(id);
@@ -49,7 +56,7 @@ export function initProjects() {
     });
 
     // 监听新增项目提交
-    projectForm.addEventListener('submit', function (event) {
+    projectForm.addEventListener('submit', function (event: SubmitEvent) {
         event.preventDefault();
         const projectName = projectInput.value.trim();
 
