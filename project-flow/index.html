@@ -1,114 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 
 <head>
-  <link rel="stylesheet" href="./src/styles/style.css">
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mini Project Dashboard</title>
-  <script type="module" src="./src/main.ts"></script>
 </head>
 
 <body>
-  <div class="layout-wrapper">
-    <!-- 1. 页头区域 -->
-    <header>
-      <h1>ProjectFlow</h1>
-      <div class="user-profile">
-        <h2>Elena</h2>
-        <img src="gear-icon.png" alt="setting">
-      </div>
-    </header>
-
-    <hr>
-
-    <div class="content-wrapper">
-      <!-- 2. 侧边导航区域 -->
-      <aside class="sidebar">
-        <h3>ProjectFlow Dashboard</h3>
-        <div class="stats-container">
-          <div class="stat-card">
-            <span class="stat-label">Projects</span>
-            <span class="stat-value" id="stat-projects">0</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-label">Tasks</span>
-            <span class="stat-value" id="stat-tasks">0</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-label">Completed</span>
-            <span class="stat-value" id="stat-completed">0</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-label">Pending</span>
-            <span class="stat-value" id="stat-pending">0</span>
-          </div>
-
-          <div class="progress-section">
-            <div class="progress-header">
-              <span>Completion Rate</span>
-              <span id="stat-rate-text">0%</span>
-            </div>
-            <div class="progress-bar-bg">
-              <div class="progress-bar-fill" id="stat-rate-bar" style="width: 0%"></div>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      <!-- 3. 主要内容区域 -->
-      <main class="main-content">
-        <!-- 项目区域 -->
-        <section class="projects">
-          <h3>My Projects</h3>
-          <div class="project-buttons">
-
-          </div>
-          <!-- 新建项目表单 -->
-          <form id="new-project-form">
-            <input type="text" id="new-project-input" placeholder="请输入新项目">
-            <button type="submit" class="add-project-button">+ Add Project</button>
-          </form>
-        </section>
-
-        <!-- 任务区域 -->
-        <section class="tasks">
-          <div class="tasks-header">
-            <h3>Recent Tasks</h3>
-            <div class="task-filters">
-              <select id="filter-status">
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
-              </select>
-              <select id="filter-priority">
-                <option value="all">All Priorities</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
-            </div>
-          </div>
-          <ul></ul>
-
-          <!-- 新建任务表单 -->
-          <form>
-            <input type="text" id="new-task-input" placeholder="请输入新任务">
-
-            <!-- 日期选择框 -->
-            <input type="date" id="new-task-date">
-
-            <!-- 优先级下拉框 -->
-            <select id="new-task-priority">
-              <option value="low">Low</option>
-              <option value="medium" selected>Medium</option>
-              <option value="high">High</option>
-            </select>
-            <button type="submit" class="add-task-button">+ Add Task</button>
-          </form>
-        </section>
-      </main>
-    </div>
-  </div>
+  <div id="root"></div>
+  <script type="module" src="./src/main.tsx"></script>
 </body>
 
 </html>

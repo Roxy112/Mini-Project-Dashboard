@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
+  plugins: [react()],
   // 本地开发服务器配置
   server: {
     port: 3000,
