@@ -23,7 +23,7 @@ const VALID_PRIORITIES = ['low', 'medium', 'high'] as const;
 
 // POST /api/tasks - 创建新任务
 router.post('/', (req: Request, res: Response) => {
-  const { text, priority, projectId, dueDate } = req.body;
+  const { text, priority, projectId, dueDate } = req.body || {};
   if (!text || typeof text !== 'string' || !text.trim()) {
     return res.status(400).json({ message: '任务内容不能为空且必须为字符串' });
   }

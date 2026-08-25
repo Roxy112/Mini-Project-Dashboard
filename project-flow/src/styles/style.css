@@ -96,16 +96,20 @@ header {
     gap: 12px;
 }
 
-.user-profile img {
-    width: 24px;
-    height: 24px;
-    opacity: 0.6;
+.user-profile img,
+.user-profile .setting-icon {
+    width: 20px;
+    height: 20px;
+    color: #4b5563;
+    opacity: 0.7;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s, transform 0.2s;
 }
 
-.user-profile img:hover {
+.user-profile img:hover,
+.user-profile .setting-icon:hover {
     opacity: 1;
+    transform: rotate(45deg);
 }
 
 hr {

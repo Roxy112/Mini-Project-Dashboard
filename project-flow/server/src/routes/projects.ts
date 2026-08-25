@@ -10,7 +10,7 @@ router.get('/', (_req: Request, res: Response) => {
 
 // POST /api/projects - 创建新项目
 router.post('/', (req: Request, res: Response) => {
-  const { name } = req.body;
+  const { name } = req.body || {};
   if (!name || typeof name !== 'string' || !name.trim()) {
     return res.status(400).json({ message: '项目名称不能为空' });
   }
