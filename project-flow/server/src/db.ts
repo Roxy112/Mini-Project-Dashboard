@@ -15,6 +15,9 @@ export let tasks: Task[] = [
 // 操作内存数组的辅助方法
 export const db = {
   getProjects: () => projects,
+  getProjectById: (id: number): Project | undefined => {
+    return projects.find(p => p.id === id);
+  },
   addProject: (name: string): Project => {
     const newProject: Project = { id: Date.now(), name };
     projects.push(newProject);

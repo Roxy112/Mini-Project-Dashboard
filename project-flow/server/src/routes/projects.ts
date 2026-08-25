@@ -20,9 +20,9 @@ router.post('/', (req: Request, res: Response) => {
 
 // DELETE /api/projects/:id - 删除项目（级联删除相关任务）
 router.delete('/:id', (req: Request, res: Response) => {
-  const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) {
-    return res.status(400).json({ message: '无效的项目 ID' });
+  const id = typeof req.params.id === 'string' ? Number(req.params.id) : NaN;
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ message: '无效的项目 ID,必须为正整数' });
   }
 
   const success = db.deleteProject(id);

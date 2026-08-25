@@ -6,7 +6,16 @@ const router = Router();
 // GET /api/tasks - 获取任务列表（支持可选 query ?projectId=xxx）
 router.get('/', (req: Request, res: Response) => {
   const projectIdQuery = req.query.projectId;
-  const projectId = projectIdQuery ? parseInt(projectIdQuery as string, 10) : undefined;
+  let projectId: number | undefined = undefined;
+
+  if (projectIdQuery !== undefined) {
+    const parsed = typeof projectIdQuery === 'string' ? Number(projectIdQuery) : NaN;
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      return res.status(400).json({ message: '查询参数 projectId 无效，必须为正整数' });
+    }
+    projectId = parsed;
+  }
+
   res.json(db.getTasks(projectId));
 });
 
@@ -18,13 +27,22 @@ router.post('/', (req: Request, res: Response) => {
   if (!text || typeof text !== 'string' || !text.trim()) {
     return res.status(400).json({ message: '任务内容不能为空且必须为字符串' });
   }
-  if (!projectId || typeof projectId !== 'number') {
-    return res.status(400).json({ message: '所属项目 ID 无效' });
+  if (!Number.isInteger(projectId) || projectId <= 0) {
+    return res.status(400).json({ message: '所属项目 ID 无效，必须为正整数' });
   }
 
-  const taskPriority = priority || 'medium';
-  if (!VALID_PRIORITIES.includes(taskPriority)) {
-    return res.status(400).json({ message: '优先级必须为 low, medium 或 high' });
+  // 模拟外键约束：检查关联的项目是否存在
+  const project = db.getProjectById(projectId);
+  if (!project) {
+    return res.status(404).json({ message: '所属项目不存在，无法创建任务' });
+  }
+
+  let taskPriority: 'low' | 'medium' | 'high' = 'medium';
+  if (priority !== undefined) {
+    if (typeof priority !== 'string' || !VALID_PRIORITIES.includes(priority as any)) {
+      return res.status(400).json({ message: '优先级必须为 low, medium 或 high' });
+    }
+    taskPriority = priority as 'low' | 'medium' | 'high';
   }
 
   if (dueDate !== undefined && typeof dueDate !== 'string') {
@@ -42,9 +60,9 @@ router.post('/', (req: Request, res: Response) => {
 
 // PATCH /api/tasks/:id - 部分更新任务（状态、文本、优先级、截止日期）
 router.patch('/:id', (req: Request, res: Response) => {
-  const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) {
-    return res.status(400).json({ message: '无效的任务 ID' });
+  const id = typeof req.params.id === 'string' ? Number(req.params.id) : NaN;
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ message: '无效的任务 ID，必须为正整数' });
   }
 
   // 1. 严格白名单解构（忽略 req.body 中的 id, projectId 和任何未知字段）
@@ -103,9 +121,9 @@ router.patch('/:id', (req: Request, res: Response) => {
 
 // DELETE /api/tasks/:id - 删除任务
 router.delete('/:id', (req: Request, res: Response) => {
-  const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) {
-    return res.status(400).json({ message: '无效的任务 ID' });
+  const id = typeof req.params.id === 'string' ? Number(req.params.id) : NaN;
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ message: '无效的任务 ID，必须为正整数' });
   }
 
   const success = db.deleteTask(id);
