@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Task, Priority, StatusFilter, PriorityFilter, CreateTaskParams, UpdateTaskParams } from '../types/index';
+import { Task, Priority, StatusFilter, PriorityFilter, TaskFormData, UpdateTaskParams } from '../types/index';
 
 interface TasksProps {
   tasks: Task[];
@@ -8,7 +8,7 @@ interface TasksProps {
   filterPriority: PriorityFilter;
   onFilterStatusChange: (status: StatusFilter) => void;
   onFilterPriorityChange: (priority: PriorityFilter) => void;
-  onAddTask: (params: CreateTaskParams) => void;
+  onAddTask: (data: TaskFormData) => void;
   onUpdateTask: (id: number, updates: UpdateTaskParams) => void;
   onDeleteTask: (id: number) => void;
 }
@@ -90,7 +90,6 @@ export default function Tasks({
       text: trimmed,
       priority: newTaskPriority,
       dueDate: newTaskDate,
-      projectId: activeProjectId,
     });
 
     setNewTaskText('');

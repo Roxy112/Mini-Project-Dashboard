@@ -4,7 +4,7 @@ import Sidebar from './components/Sidebar';
 import Projects from './components/Projects';
 import Tasks from './components/Tasks';
 import { api } from './services/api';
-import { Project, Task, CreateTaskParams, UpdateTaskParams, StatusFilter, PriorityFilter } from './types/index';
+import { Project, Task, TaskFormData, UpdateTaskParams, StatusFilter, PriorityFilter } from './types/index';
 
 export default function App(): React.JSX.Element {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -71,9 +71,17 @@ export default function App(): React.JSX.Element {
   };
 
   // 4. 新增任务
-  const handleAddTask = async (params: CreateTaskParams) => {
+  const handleAddTask = async (formData: TaskFormData) => {
+    if (activeProjectId === null) {
+      alert('请先添加或选择一个项目！');
+      return;
+    }
+
     try {
-      const newTask = await api.createTask(params);
+      const newTask = await api.createTask({
+        ...formData,
+        projectId: activeProjectId,
+      });
       setTasks(prev => [...prev, newTask]);
     } catch (err: any) {
       alert(`创建任务失败: ${err.message}`);
