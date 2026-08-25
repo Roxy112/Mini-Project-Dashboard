@@ -40,14 +40,15 @@ router.post('/', (req: Request, res: Response) => {
   res.status(201).json(newTask);
 });
 
-// PATCH /api/tasks/:id - 部分更新任务（状态、文本、优先级等）
+// PATCH /api/tasks/:id - 部分更新任务（状态、文本、优先级、截止日期）
 router.patch('/:id', (req: Request, res: Response) => {
   const id = parseInt(req.params.id, 10);
   if (isNaN(id)) {
     return res.status(400).json({ message: '无效的任务 ID' });
   }
 
-  const { text, done, priority, dueDate } = req.body;
+  // 1. 严格白名单解构（忽略 req.body 中的 id, projectId 和任何未知字段）
+  const { text, done, priority, dueDate } = req.body || {};
   const updates: {
     text?: string;
     done?: boolean;
@@ -55,7 +56,7 @@ router.patch('/:id', (req: Request, res: Response) => {
     dueDate?: string;
   } = {};
 
-  // 1. text 字段校验
+  // 2. text 字段校验 (string & trim 后非空)
   if (text !== undefined) {
     if (typeof text !== 'string' || !text.trim()) {
       return res.status(400).json({ message: '任务内容不能为空且必须为字符串' });
@@ -63,7 +64,7 @@ router.patch('/:id', (req: Request, res: Response) => {
     updates.text = text.trim();
   }
 
-  // 2. done 字段校验
+  // 3. done 字段校验 (boolean)
   if (done !== undefined) {
     if (typeof done !== 'boolean') {
       return res.status(400).json({ message: '任务完成状态必须为布尔值' });
@@ -71,7 +72,7 @@ router.patch('/:id', (req: Request, res: Response) => {
     updates.done = done;
   }
 
-  // 3. priority 字段校验
+  // 4. priority 字段校验 ('low' | 'medium' | 'high')
   if (priority !== undefined) {
     if (typeof priority !== 'string' || !VALID_PRIORITIES.includes(priority as any)) {
       return res.status(400).json({ message: '优先级必须为 low, medium 或 high' });
@@ -79,7 +80,7 @@ router.patch('/:id', (req: Request, res: Response) => {
     updates.priority = priority as 'low' | 'medium' | 'high';
   }
 
-  // 4. dueDate 字段校验
+  // 5. dueDate 字段校验 (string)
   if (dueDate !== undefined) {
     if (typeof dueDate !== 'string') {
       return res.status(400).json({ message: '截止日期必须为字符串' });
@@ -87,11 +88,12 @@ router.patch('/:id', (req: Request, res: Response) => {
     updates.dueDate = dueDate;
   }
 
-  // 5. 检查是否提供了至少一个有效可更新字段
+  // 6. 检查是否提供了至少一个有效可更新字段
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({ message: '未提供任何有效的可更新字段' });
   }
 
+  // 7. 只向底层数据库传递经过验证的安全 updates 对象
   const updatedTask = db.updateTask(id, updates);
   if (!updatedTask) {
     return res.status(404).json({ message: '未找到指定任务' });
