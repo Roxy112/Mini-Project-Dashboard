@@ -32,9 +32,10 @@ export default function App(): React.JSX.Element {
         if (fetchedProjects.length > 0) {
           setActiveProjectId(fetchedProjects[0].id);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('初始化数据失败:', err);
-        setError(err.message || '从后端加载数据失败');
+        const errorMessage = err instanceof Error ? err.message : '从后端加载数据失败';
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -48,8 +49,9 @@ export default function App(): React.JSX.Element {
       const newProject = await api.createProject(name);
       setProjects(prev => [...prev, newProject]);
       setActiveProjectId(newProject.id);
-    } catch (err: any) {
-      alert(`创建项目失败: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '未知错误';
+      alert(`创建项目失败: ${message}`);
     }
   };
 
@@ -65,8 +67,9 @@ export default function App(): React.JSX.Element {
       if (activeProjectId === id) {
         setActiveProjectId(remainingProjects.length > 0 ? remainingProjects[0].id : null);
       }
-    } catch (err: any) {
-      alert(`删除项目失败: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '未知错误';
+      alert(`删除项目失败: ${message}`);
     }
   };
 
@@ -83,8 +86,9 @@ export default function App(): React.JSX.Element {
         projectId: activeProjectId,
       });
       setTasks(prev => [...prev, newTask]);
-    } catch (err: any) {
-      alert(`创建任务失败: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '未知错误';
+      alert(`创建任务失败: ${message}`);
     }
   };
 
@@ -93,8 +97,9 @@ export default function App(): React.JSX.Element {
     try {
       const updatedTask = await api.updateTask(id, updates);
       setTasks(prev => prev.map(t => (t.id === id ? updatedTask : t)));
-    } catch (err: any) {
-      alert(`更新任务失败: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '未知错误';
+      alert(`更新任务失败: ${message}`);
     }
   };
 
@@ -103,8 +108,9 @@ export default function App(): React.JSX.Element {
     try {
       await api.deleteTask(id);
       setTasks(prev => prev.filter(t => t.id !== id));
-    } catch (err: any) {
-      alert(`删除任务失败: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '未知错误';
+      alert(`删除任务失败: ${message}`);
     }
   };
 
