@@ -21,7 +21,7 @@ function getTodayDateString(): string {
   return `${year}-${month}-${day}`;
 }
 
-function formatDateBadge(dueDate?: string): string | null {
+function formatDateBadge(dueDate?: string | null): string | null {
   if (!dueDate) return null;
   const parts = dueDate.split('-');
   if (parts.length === 3) {
@@ -148,11 +148,17 @@ export default function Tasks({
       </div>
 
       <ul>
-        {hasActiveProject && filteredTasks.length === 0 ? (
+        {!hasActiveProject ? (
+          <li className="empty-state">
+            <div className="empty-icon">📁</div>
+            <div className="empty-title">未选择任何项目</div>
+            <div className="empty-subtitle">请先在上方创建或选择一个项目</div>
+          </li>
+        ) : filteredTasks.length === 0 ? (
           <li className="empty-state">
             <div className="empty-icon">📋</div>
-            <div className="empty-title">No tasks yet.</div>
-            <div className="empty-subtitle">Create your first task.</div>
+            <div className="empty-title">当前项目暂无任务</div>
+            <div className="empty-subtitle">在下方输入框创建你的第一个任务吧</div>
           </li>
         ) : (
           filteredTasks.map(task => {

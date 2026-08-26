@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 优先级枚举类型
+enum Priority {
+  low
+  medium
+  high
+}
+
+// 项目表 (Project)
+model Project {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tasks     Task[]   // 1 对多关联：一个项目包含多个任务
+}
+
+// 任务表 (Task)
+model Task {
+  id        Int       @id @default(autoincrement())
+  text      String
+  done      Boolean   @default(false)
+  priority  Priority  @default(medium)
+  dueDate   String?
+  projectId Int
+  // 外键约束：关联 Project 表，并在删除项目时级联删除其所有任务
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
