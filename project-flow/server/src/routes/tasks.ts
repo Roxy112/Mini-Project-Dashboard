@@ -21,6 +21,22 @@ router.get('/', (req: Request, res: Response) => {
 
 const VALID_PRIORITIES = ['low', 'medium', 'high'] as const;
 
+/**
+ * 校验字符串是否为合法的 YYYY-MM-DD 格式且日历有效
+ */
+function isValidDateString(dateStr: unknown): boolean {
+  if (typeof dateStr !== 'string') return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
+
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+  );
+}
+
 // POST /api/tasks - 创建新任务
 router.post('/', (req: Request, res: Response) => {
   const { text, priority, projectId, dueDate } = req.body || {};
@@ -45,8 +61,10 @@ router.post('/', (req: Request, res: Response) => {
     taskPriority = priority as 'low' | 'medium' | 'high';
   }
 
-  if (dueDate !== undefined && typeof dueDate !== 'string') {
-    return res.status(400).json({ message: '截止日期必须为字符串' });
+  if (dueDate !== undefined) {
+    if (!isValidDateString(dueDate)) {
+      return res.status(400).json({ message: '截止日期必须为合法的 YYYY-MM-DD 格式 (例如: 2026-08-30)' });
+    }
   }
 
   const newTask = db.addTask({
@@ -98,10 +116,10 @@ router.patch('/:id', (req: Request, res: Response) => {
     updates.priority = priority as 'low' | 'medium' | 'high';
   }
 
-  // 5. dueDate 字段校验 (string)
+  // 5. dueDate 字段校验 (YYYY-MM-DD 且日历有效)
   if (dueDate !== undefined) {
-    if (typeof dueDate !== 'string') {
-      return res.status(400).json({ message: '截止日期必须为字符串' });
+    if (!isValidDateString(dueDate)) {
+      return res.status(400).json({ message: '截止日期必须为合法的 YYYY-MM-DD 格式 (例如: 2026-08-30)' });
     }
     updates.dueDate = dueDate;
   }
