@@ -1,4 +1,4 @@
-import { Project, Task } from '../../src/types/index';
+import { Project, Task } from '../../shared/types';
 
 // 内存中的初始数据
 export let projects: Project[] = [
