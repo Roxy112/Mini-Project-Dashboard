@@ -17,8 +17,12 @@ router.post('/', async (req: Request, res: Response) => {
   if (!name || typeof name !== 'string' || !name.trim()) {
     return res.status(400).json({ message: '项目名称不能为空' });
   }
+  const trimmedName = name.trim();
+  if (trimmedName.length > 100) {
+    return res.status(400).json({ message: '项目名称长度不能超过 100 个字符' });
+  }
   const newProject = await prisma.project.create({
-    data: { name: name.trim() },
+    data: { name: trimmedName },
   });
   res.status(201).json(newProject);
 });
