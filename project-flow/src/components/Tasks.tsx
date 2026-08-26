@@ -21,7 +21,7 @@ function getTodayDateString(): string {
   return `${year}-${month}-${day}`;
 }
 
-function formatDateBadge(dueDate?: string): string | null {
+function formatDateBadge(dueDate?: string | null): string | null {
   if (!dueDate) return null;
   const parts = dueDate.split('-');
   if (parts.length === 3) {

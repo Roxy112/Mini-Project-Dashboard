@@ -11,10 +11,13 @@
     "typecheck:server": "tsc --project server/tsconfig.json --noEmit",
     "typecheck": "npm run typecheck:client && npm run typecheck:server",
     "build": "npm run typecheck && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
@@ -27,8 +30,12 @@
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.0",
     "concurrently": "^10.0.5",
+    "prisma": "^6.19.3",
     "tsx": "^4.23.12",
     "typescript": "^7.0.2",
     "vite": "^8.2.2"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

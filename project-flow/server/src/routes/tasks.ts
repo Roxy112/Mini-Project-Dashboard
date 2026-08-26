@@ -1,10 +1,11 @@
 import { Router, Request, Response } from 'express';
-import { db } from '../db';
+import { prisma } from '../prisma';
+import { Priority } from '@prisma/client';
 
 const router = Router();
 
 // GET /api/tasks - 获取任务列表（支持可选 query ?projectId=xxx）
-router.get('/', (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
   const projectIdQuery = req.query.projectId;
   let projectId: number | undefined = undefined;
 
@@ -16,7 +17,12 @@ router.get('/', (req: Request, res: Response) => {
     projectId = parsed;
   }
 
-  res.json(db.getTasks(projectId));
+  const tasks = await prisma.task.findMany({
+    where: projectId !== undefined ? { projectId } : undefined,
+    orderBy: { id: 'asc' },
+  });
+
+  res.json(tasks);
 });
 
 const VALID_PRIORITIES = ['low', 'medium', 'high'] as const;
@@ -38,7 +44,7 @@ function isValidDateString(dateStr: unknown): boolean {
 }
 
 // POST /api/tasks - 创建新任务
-router.post('/', (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
   const { text, priority, projectId, dueDate } = req.body || {};
   if (!text || typeof text !== 'string' || !text.trim()) {
     return res.status(400).json({ message: '任务内容不能为空且必须为字符串' });
@@ -47,37 +53,41 @@ router.post('/', (req: Request, res: Response) => {
     return res.status(400).json({ message: '所属项目 ID 无效，必须为正整数' });
   }
 
-  // 模拟外键约束：检查关联的项目是否存在
-  const project = db.getProjectById(projectId);
+  // 检查关联的项目是否存在
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+  });
   if (!project) {
     return res.status(404).json({ message: '所属项目不存在，无法创建任务' });
   }
 
-  let taskPriority: 'low' | 'medium' | 'high' = 'medium';
+  let taskPriority: Priority = 'medium';
   if (priority !== undefined) {
     if (typeof priority !== 'string' || !VALID_PRIORITIES.includes(priority as any)) {
       return res.status(400).json({ message: '优先级必须为 low, medium 或 high' });
     }
-    taskPriority = priority as 'low' | 'medium' | 'high';
+    taskPriority = priority as Priority;
   }
 
-  if (dueDate !== undefined) {
+  if (dueDate !== undefined && dueDate !== null && dueDate !== '') {
     if (!isValidDateString(dueDate)) {
       return res.status(400).json({ message: '截止日期必须为合法的 YYYY-MM-DD 格式 (例如: 2026-08-30)' });
     }
   }
 
-  const newTask = db.addTask({
-    text: text.trim(),
-    priority: taskPriority,
-    projectId,
-    dueDate,
+  const newTask = await prisma.task.create({
+    data: {
+      text: text.trim(),
+      priority: taskPriority,
+      projectId,
+      dueDate: dueDate || null,
+    },
   });
   res.status(201).json(newTask);
 });
 
 // PATCH /api/tasks/:id - 部分更新任务（状态、文本、优先级、截止日期）
-router.patch('/:id', (req: Request, res: Response) => {
+router.patch('/:id', async (req: Request, res: Response) => {
   const id = typeof req.params.id === 'string' ? Number(req.params.id) : NaN;
   if (!Number.isInteger(id) || id <= 0) {
     return res.status(400).json({ message: '无效的任务 ID，必须为正整数' });
@@ -88,8 +98,8 @@ router.patch('/:id', (req: Request, res: Response) => {
   const updates: {
     text?: string;
     done?: boolean;
-    priority?: 'low' | 'medium' | 'high';
-    dueDate?: string;
+    priority?: Priority;
+    dueDate?: string | null;
   } = {};
 
   // 2. text 字段校验 (string & trim 后非空)
@@ -113,15 +123,19 @@ router.patch('/:id', (req: Request, res: Response) => {
     if (typeof priority !== 'string' || !VALID_PRIORITIES.includes(priority as any)) {
       return res.status(400).json({ message: '优先级必须为 low, medium 或 high' });
     }
-    updates.priority = priority as 'low' | 'medium' | 'high';
+    updates.priority = priority as Priority;
   }
 
-  // 5. dueDate 字段校验 (YYYY-MM-DD 且日历有效)
+  // 5. dueDate 字段校验 (YYYY-MM-DD 且日历有效，或允许传 null / '' 进行清除)
   if (dueDate !== undefined) {
-    if (!isValidDateString(dueDate)) {
-      return res.status(400).json({ message: '截止日期必须为合法的 YYYY-MM-DD 格式 (例如: 2026-08-30)' });
+    if (dueDate === null || dueDate === '') {
+      updates.dueDate = null;
+    } else {
+      if (!isValidDateString(dueDate)) {
+        return res.status(400).json({ message: '截止日期必须为合法的 YYYY-MM-DD 格式 (例如: 2026-08-30)' });
+      }
+      updates.dueDate = dueDate;
     }
-    updates.dueDate = dueDate;
   }
 
   // 6. 检查是否提供了至少一个有效可更新字段
@@ -129,26 +143,39 @@ router.patch('/:id', (req: Request, res: Response) => {
     return res.status(400).json({ message: '未提供任何有效的可更新字段' });
   }
 
-  // 7. 只向底层数据库传递经过验证的安全 updates 对象
-  const updatedTask = db.updateTask(id, updates);
-  if (!updatedTask) {
-    return res.status(404).json({ message: '未找到指定任务' });
+  // 7. 向数据库执行更新
+  try {
+    const updatedTask = await prisma.task.update({
+      where: { id },
+      data: updates,
+    });
+    res.json(updatedTask);
+  } catch (error: any) {
+    if (error?.code === 'P2025') {
+      return res.status(404).json({ message: '未找到指定任务' });
+    }
+    throw error;
   }
-  res.json(updatedTask);
 });
 
 // DELETE /api/tasks/:id - 删除任务
-router.delete('/:id', (req: Request, res: Response) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   const id = typeof req.params.id === 'string' ? Number(req.params.id) : NaN;
   if (!Number.isInteger(id) || id <= 0) {
     return res.status(400).json({ message: '无效的任务 ID，必须为正整数' });
   }
 
-  const success = db.deleteTask(id);
-  if (!success) {
-    return res.status(404).json({ message: '未找到指定任务' });
+  try {
+    await prisma.task.delete({
+      where: { id },
+    });
+    res.json({ message: '任务删除成功' });
+  } catch (error: any) {
+    if (error?.code === 'P2025') {
+      return res.status(404).json({ message: '未找到指定任务' });
+    }
+    throw error;
   }
-  res.json({ message: '任务删除成功' });
 });
 
 export default router;

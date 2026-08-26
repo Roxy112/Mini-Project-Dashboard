@@ -1,3 +1,11 @@
+# 环境变量与敏感配置 (重要: 避免密码泄露)
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
 # Node 依赖与构建产物
 node_modules/
 dist/
@@ -5,7 +13,7 @@ dist-ssr/
 *.local
 
 # 日志
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -13,13 +21,26 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# 编辑器与系统生成文件
+# 临时缓存与构建信息
+.vite/
+*.tsbuildinfo
+.eslintcache
+
+# 编辑器与 IDE 配置
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# 操作系统临时文件
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# Prisma 生成目录 (如使用自定义 output 时)
+/src/generated/prisma

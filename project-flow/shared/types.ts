@@ -11,5 +11,5 @@ export interface Task {
   done: boolean;
   projectId: number;
   priority: Priority;
-  dueDate?: string;
+  dueDate?: string | null;
 }
