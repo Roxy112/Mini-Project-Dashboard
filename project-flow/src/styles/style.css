@@ -391,13 +391,56 @@ hr {
     border-color: #ef4444;
 }
 
-/* 新增的下拉框样式 */
+/* 新建任务表单中的输入控件样式 */
+#new-task-date,
 #new-task-priority {
-    padding: 8px;
+    padding: 8px 12px;
     border: 1px solid #d1d5db;
     border-radius: 6px;
     outline: none;
     font-size: 14px;
+    font-family: inherit;
+    color: #374151;
+    background-color: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#new-task-date:focus,
+#new-task-priority:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+#new-task-date:disabled,
+#new-task-priority:disabled {
+    background-color: #f9fafb;
+    border-color: #e5e7eb;
+    color: #9ca3af;
+}
+
+/* WebKit 日历触发图标美化 */
+#new-task-date::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+#new-task-date::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* 任务列表中的日期徽章 */
+.task-date-badge {
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #475569;
+    background-color: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    flex-shrink: 0;
 }
 
 /* 优先级标签基础样式 */

@@ -43,12 +43,28 @@ function isValidDateString(dateStr: unknown): boolean {
   );
 }
 
+/**
+ * 获取当前日期的 YYYY-MM-DD 字符串 (本地时间)
+ */
+function getTodayDateString(): string {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // POST /api/tasks - 创建新任务
 router.post('/', async (req: Request, res: Response) => {
   const { text, priority, projectId, dueDate } = req.body || {};
   if (!text || typeof text !== 'string' || !text.trim()) {
     return res.status(400).json({ message: '任务内容不能为空且必须为字符串' });
   }
+  const trimmedText = text.trim();
+  if (trimmedText.length > 500) {
+    return res.status(400).json({ message: '任务内容长度不能超过 500 个字符' });
+  }
+
   if (!Number.isInteger(projectId) || projectId <= 0) {
     return res.status(400).json({ message: '所属项目 ID 无效，必须为正整数' });
   }
@@ -73,11 +89,14 @@ router.post('/', async (req: Request, res: Response) => {
     if (!isValidDateString(dueDate)) {
       return res.status(400).json({ message: '截止日期必须为合法的 YYYY-MM-DD 格式 (例如: 2026-08-30)' });
     }
+    if (dueDate < getTodayDateString()) {
+      return res.status(400).json({ message: '截止日期不能早于今天' });
+    }
   }
 
   const newTask = await prisma.task.create({
     data: {
-      text: text.trim(),
+      text: trimmedText,
       priority: taskPriority,
       projectId,
       dueDate: dueDate || null,
@@ -102,12 +121,16 @@ router.patch('/:id', async (req: Request, res: Response) => {
     dueDate?: string | null;
   } = {};
 
-  // 2. text 字段校验 (string & trim 后非空)
+  // 2. text 字段校验 (string & trim 后非空，最长 500 字符)
   if (text !== undefined) {
     if (typeof text !== 'string' || !text.trim()) {
       return res.status(400).json({ message: '任务内容不能为空且必须为字符串' });
     }
-    updates.text = text.trim();
+    const trimmed = text.trim();
+    if (trimmed.length > 500) {
+      return res.status(400).json({ message: '任务内容长度不能超过 500 个字符' });
+    }
+    updates.text = trimmed;
   }
 
   // 3. done 字段校验 (boolean)
@@ -126,13 +149,16 @@ router.patch('/:id', async (req: Request, res: Response) => {
     updates.priority = priority as Priority;
   }
 
-  // 5. dueDate 字段校验 (YYYY-MM-DD 且日历有效，或允许传 null / '' 进行清除)
+  // 5. dueDate 字段校验 (YYYY-MM-DD 且不可早于今天，或允许传 null / '' 进行清除)
   if (dueDate !== undefined) {
     if (dueDate === null || dueDate === '') {
       updates.dueDate = null;
     } else {
       if (!isValidDateString(dueDate)) {
         return res.status(400).json({ message: '截止日期必须为合法的 YYYY-MM-DD 格式 (例如: 2026-08-30)' });
+      }
+      if (dueDate < getTodayDateString()) {
+        return res.status(400).json({ message: '截止日期不能早于今天' });
       }
       updates.dueDate = dueDate;
     }

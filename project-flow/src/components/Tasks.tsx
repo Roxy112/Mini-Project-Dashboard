@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Task, Priority, StatusFilter, PriorityFilter, TaskFormData, UpdateTaskParams } from '../types/index';
 
 interface TasksProps {
@@ -59,6 +59,12 @@ export default function Tasks({
 
   const hasActiveProject = activeProjectId !== null;
 
+  // 当切换所属项目时，自动清理当前行内编辑状态
+  useEffect(() => {
+    setEditingTaskId(null);
+    setEditingText('');
+  }, [activeProjectId]);
+
   // 过滤任务
   let filteredTasks = tasks.filter(task => task.projectId === activeProjectId);
 
@@ -83,6 +89,12 @@ export default function Tasks({
     const trimmed = newTaskText.trim();
     if (!trimmed) {
       alert('请输入任务内容！');
+      return;
+    }
+
+    const todayStr = getTodayDateString();
+    if (newTaskDate && newTaskDate < todayStr) {
+      alert('截止日期不能早于今天！');
       return;
     }
 
@@ -249,15 +261,12 @@ export default function Tasks({
           onChange={e => setNewTaskText(e.target.value)}
         />
 
-        {/* 日期选择框 */}
+        {/* 日期选择框（设置 min 为今天，禁用旧日期选择） */}
         <input
           type="date"
           id="new-task-date"
+          min={getTodayDateString()}
           disabled={!hasActiveProject}
-          style={{
-            opacity: hasActiveProject ? 1 : 0.5,
-            cursor: hasActiveProject ? 'pointer' : 'not-allowed',
-          }}
           value={newTaskDate}
           onChange={e => setNewTaskDate(e.target.value)}
         />
@@ -266,10 +275,6 @@ export default function Tasks({
         <select
           id="new-task-priority"
           disabled={!hasActiveProject}
-          style={{
-            opacity: hasActiveProject ? 1 : 0.5,
-            cursor: hasActiveProject ? 'pointer' : 'not-allowed',
-          }}
           value={newTaskPriority}
           onChange={e => setNewTaskPriority(e.target.value as Priority)}
         >
@@ -282,10 +287,6 @@ export default function Tasks({
           type="submit"
           className="add-task-button"
           disabled={!hasActiveProject}
-          style={{
-            opacity: hasActiveProject ? 1 : 0.5,
-            cursor: hasActiveProject ? 'pointer' : 'not-allowed',
-          }}
         >
           + Add Task
         </button>
