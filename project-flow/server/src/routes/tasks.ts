@@ -4,6 +4,20 @@ import { Priority } from '@prisma/client';
 
 const router = Router();
 
+/**
+ * 格式化任务返回对象，将 Date 类型统一序列化为 YYYY-MM-DD 字符串
+ */
+function formatTask<T extends { dueDate?: Date | string | null }>(task: T): T & { dueDate: string | null } {
+  return {
+    ...task,
+    dueDate: task.dueDate instanceof Date
+      ? task.dueDate.toISOString().split('T')[0]
+      : typeof task.dueDate === 'string'
+        ? task.dueDate.split('T')[0]
+        : null,
+  };
+}
+
 // GET /api/tasks - 获取任务列表（支持可选 query ?projectId=xxx）
 router.get('/', async (req: Request, res: Response) => {
   const projectIdQuery = req.query.projectId;
@@ -22,7 +36,7 @@ router.get('/', async (req: Request, res: Response) => {
     orderBy: { id: 'asc' },
   });
 
-  res.json(tasks);
+  res.json(tasks.map(formatTask));
 });
 
 const VALID_PRIORITIES = ['low', 'medium', 'high'] as const;
@@ -99,10 +113,10 @@ router.post('/', async (req: Request, res: Response) => {
       text: trimmedText,
       priority: taskPriority,
       projectId,
-      dueDate: dueDate || null,
+      dueDate: dueDate ? new Date(dueDate) : null,
     },
   });
-  res.status(201).json(newTask);
+  res.status(201).json(formatTask(newTask));
 });
 
 // PATCH /api/tasks/:id - 部分更新任务（状态、文本、优先级、截止日期）
@@ -118,7 +132,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
     text?: string;
     done?: boolean;
     priority?: Priority;
-    dueDate?: string | null;
+    dueDate?: Date | null;
   } = {};
 
   // 2. text 字段校验 (string & trim 后非空，最长 500 字符)
@@ -160,7 +174,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
       if (dueDate < getTodayDateString()) {
         return res.status(400).json({ message: '截止日期不能早于今天' });
       }
-      updates.dueDate = dueDate;
+      updates.dueDate = new Date(dueDate);
     }
   }
 
@@ -175,7 +189,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
       where: { id },
       data: updates,
     });
-    res.json(updatedTask);
+    res.json(formatTask(updatedTask));
   } catch (error: any) {
     if (error?.code === 'P2025') {
       return res.status(404).json({ message: '未找到指定任务' });
