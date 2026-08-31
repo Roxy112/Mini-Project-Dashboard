@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import pool from './database/pool';
 import projectRoutes from './routes/projects';
 import taskRoutes from './routes/tasks';
 
@@ -15,9 +16,23 @@ app.use(express.json());
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 
-// 健康检查路由
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// 健康检查路由 (检查 Express 与 PostgreSQL 存活状态)
+app.get('/api/health', async (_req, res) => {
+  try {
+    const result = await pool.query('SELECT current_database() AS database;');
+    res.json({
+      status: 'ok',
+      database: result.rows[0]?.database || 'unknown',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(503).json({
+      status: 'error',
+      database: 'disconnected',
+      message: error?.message || 'Database connection error',
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // 全局统一 JSON 错误处理中间件 (Express 5 异常捕获)
