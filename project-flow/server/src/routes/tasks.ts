@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { prisma } from '../prisma';
+import { db } from '../db';
 import { Priority } from '@prisma/client';
 
 const router = Router();
@@ -31,7 +31,7 @@ router.get('/', async (req: Request, res: Response) => {
     projectId = parsed;
   }
 
-  const tasks = await prisma.task.findMany({
+  const tasks = await db.task.findMany({
     where: projectId !== undefined ? { projectId } : undefined,
     orderBy: { id: 'asc' },
   });
@@ -84,7 +84,7 @@ router.post('/', async (req: Request, res: Response) => {
   }
 
   // 检查关联的项目是否存在
-  const project = await prisma.project.findUnique({
+  const project = await db.project.findUnique({
     where: { id: projectId },
   });
   if (!project) {
@@ -108,7 +108,7 @@ router.post('/', async (req: Request, res: Response) => {
     }
   }
 
-  const newTask = await prisma.task.create({
+  const newTask = await db.task.create({
     data: {
       text: trimmedText,
       priority: taskPriority,
@@ -185,7 +185,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
 
   // 7. 向数据库执行更新
   try {
-    const updatedTask = await prisma.task.update({
+    const updatedTask = await db.task.update({
       where: { id },
       data: updates,
     });
@@ -206,7 +206,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
   }
 
   try {
-    await prisma.task.delete({
+    await db.task.delete({
       where: { id },
     });
     res.json({ message: '任务删除成功' });
