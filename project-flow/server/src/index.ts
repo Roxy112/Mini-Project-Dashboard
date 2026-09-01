@@ -19,30 +19,38 @@ app.use('/api/tasks', taskRoutes);
 // 健康检查路由 (检查 Express 与 PostgreSQL 存活状态)
 app.get('/api/health', async (_req, res) => {
   try {
-    const result = await pool.query('SELECT current_database() AS database;');
+    await pool.query('SELECT 1;');
     res.json({
       status: 'ok',
-      database: result.rows[0]?.database || 'unknown',
+      database: 'connected',
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    console.error('Database health check failed', error);
+
     res.status(503).json({
       status: 'error',
       database: 'disconnected',
-      message: error?.message || 'Database connection error',
+      message: 'Database connection error',
       timestamp: new Date().toISOString(),
     });
   }
 });
 
 // 全局统一 JSON 错误处理中间件 (Express 5 异常捕获)
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('💥 未捕获的服务器异常:', err);
+app.use((err: unknown, 
+  _req: express.Request, 
+  res: express.Response, 
+  _next: express.NextFunction
+) => {
+  console.error('未捕获的服务器异常:', err);
+
   res.status(500).json({
-    message: err?.message || '服务器内部发生错误，请稍后重试',
+    message : '服务器内部发生错误，请稍后重试',
+    timestamp: new Date().toISOString(),
   });
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 后端 REST API 服务已启动: http://localhost:${PORT}`);
+  console.log(`后端 REST API 服务已启动: http://localhost:${PORT}`);
 });
