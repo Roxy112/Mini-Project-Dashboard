@@ -7,9 +7,8 @@ async function seed() {
   try {
     await client.query('BEGIN');
 
-    // 1. 清理旧数据 (级联清理 tasks)
-    await client.query('DELETE FROM tasks;');
-    await client.query('DELETE FROM projects;');
+    // 1. 清理旧数据并重置序列 (级联清理 tasks)
+    await client.query('TRUNCATE TABLE projects RESTART IDENTITY CASCADE;');
 
     // 2. 插入 Project A
     const projectAResult = await client.query(
