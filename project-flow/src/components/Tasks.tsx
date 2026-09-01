@@ -139,6 +139,7 @@ export default function Tasks({
         <div className="task-filters">
           <select
             id="filter-status"
+            aria-label="按任务状态筛选"
             value={filterStatus}
             onChange={e => onFilterStatusChange(e.target.value as StatusFilter)}
           >
@@ -148,6 +149,7 @@ export default function Tasks({
           </select>
           <select
             id="filter-priority"
+            aria-label="按任务优先级筛选"
             value={filterPriority}
             onChange={e => onFilterPriorityChange(e.target.value as PriorityFilter)}
           >
@@ -179,11 +181,12 @@ export default function Tasks({
             const dateText = formatDateBadge(task.dueDate);
 
             return (
-              <li key={task.id}>
-                <label>
+              <li key={task.id} className="task-item">
+                <div className="task-content">
                   <input
                     type="checkbox"
                     className="item-check"
+                    aria-label={`标记任务 "${task.text}" 为${task.done ? '未完成' : '已完成'}`}
                     checked={task.done}
                     onChange={e => onUpdateTask(task.id, { done: e.target.checked })}
                   />
@@ -192,9 +195,9 @@ export default function Tasks({
                     <input
                       type="text"
                       className="edit-task-input"
+                      aria-label={`正在编辑任务 "${task.text}"`}
                       value={editingText}
                       autoFocus
-                      onClick={e => e.stopPropagation()}
                       onChange={e => setEditingText(e.target.value)}
                       onKeyDown={e => {
                         if (e.key === 'Enter') {
@@ -216,13 +219,14 @@ export default function Tasks({
                   <span className={`priority-badge prio-${prio}`}>
                     {prio.toUpperCase()}
                   </span>
-                </label>
+                </div>
 
                 <div className="task-actions">
                   {isEditing ? (
                     <button
                       type="button"
                       className="save-task"
+                      aria-label={`保存任务 "${task.text}" 的修改`}
                       onClick={() => handleSaveEdit(task.id)}
                     >
                       save
@@ -231,6 +235,7 @@ export default function Tasks({
                     <button
                       type="button"
                       className="edit-task"
+                      aria-label={`编辑任务 "${task.text}"`}
                       onClick={() => handleStartEdit(task)}
                     >
                       edit
@@ -239,6 +244,7 @@ export default function Tasks({
                   <button
                     type="button"
                     className="delete-task"
+                    aria-label={`删除任务 "${task.text}"`}
                     onClick={() => onDeleteTask(task.id)}
                   >
                     delete
@@ -255,6 +261,7 @@ export default function Tasks({
         <input
           type="text"
           id="new-task-input"
+          aria-label="新任务内容"
           placeholder={hasActiveProject ? '请输入新任务' : '请先添加或选择一个项目'}
           disabled={!hasActiveProject}
           value={newTaskText}
@@ -265,6 +272,7 @@ export default function Tasks({
         <input
           type="date"
           id="new-task-date"
+          aria-label="任务截止日期"
           min={getTodayDateString()}
           disabled={!hasActiveProject}
           value={newTaskDate}
@@ -274,6 +282,7 @@ export default function Tasks({
         {/* 优先级下拉框 */}
         <select
           id="new-task-priority"
+          aria-label="任务优先级选择"
           disabled={!hasActiveProject}
           value={newTaskPriority}
           onChange={e => setNewTaskPriority(e.target.value as Priority)}
@@ -286,6 +295,7 @@ export default function Tasks({
         <button
           type="submit"
           className="add-task-button"
+          aria-label="添加新任务"
           disabled={!hasActiveProject}
         >
           + Add Task

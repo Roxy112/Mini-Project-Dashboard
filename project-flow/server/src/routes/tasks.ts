@@ -5,17 +5,27 @@ import { Priority } from '../../../shared/types';
 const router = Router();
 
 /**
- * 格式化任务返回对象，将 Date 类型统一序列化为 YYYY-MM-DD 字符串
+ * 格式化任务返回对象，严格提取为 YYYY-MM-DD 字符串或 null，覆盖原 dueDate 属性类型
  */
-function formatTask<T extends { dueDate?: Date | string | null }>(task: T): T & { dueDate: string | null } {
+function formatTask<T extends { dueDate?: Date | string | null }>(
+  task: T
+): Omit<T, 'dueDate'> & { dueDate: string | null } {
+  const { dueDate, ...rest } = task;
+  let formattedDate: string | null = null;
+
+  if (dueDate instanceof Date) {
+    const year = dueDate.getFullYear();
+    const month = String(dueDate.getMonth() + 1).padStart(2, '0');
+    const day = String(dueDate.getDate()).padStart(2, '0');
+    formattedDate = `${year}-${month}-${day}`;
+  } else if (typeof dueDate === 'string') {
+    formattedDate = dueDate.split('T')[0] || null;
+  }
+
   return {
-    ...task,
-    dueDate: task.dueDate instanceof Date
-      ? task.dueDate.toISOString().split('T')[0]
-      : typeof task.dueDate === 'string'
-        ? task.dueDate.split('T')[0]
-        : null,
-  };
+    ...rest,
+    dueDate: formattedDate,
+  } as Omit<T, 'dueDate'> & { dueDate: string | null };
 }
 
 // GET /api/tasks - 获取任务列表（支持可选 query ?projectId=xxx）

@@ -298,11 +298,10 @@ hr {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.tasks label {
+.tasks .task-content {
     display: flex;
     align-items: center;
     flex-grow: 1;
-    cursor: pointer;
     min-width: 0;
 }
 

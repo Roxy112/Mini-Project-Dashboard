@@ -43,6 +43,8 @@ export default function Projects({
             <button
               className={`project-btn ${project.id === activeProjectId ? 'active' : ''}`}
               data-id={project.id}
+              aria-pressed={project.id === activeProjectId}
+              aria-label={`选择项目 ${project.name}`}
               onClick={() => onSelectProject(project.id)}
             >
               {project.name}
@@ -50,9 +52,10 @@ export default function Projects({
             <button
               className="delete-project-btn"
               data-id={project.id}
+              aria-label={`删除项目 ${project.name}`}
               onClick={() => handleDelete(project.id)}
             >
-              x
+              &times;
             </button>
           </div>
         ))}
@@ -63,11 +66,14 @@ export default function Projects({
         <input
           type="text"
           id="new-project-input"
+          aria-label="新项目名称"
           placeholder="请输入新项目"
           value={newProjectName}
           onChange={e => setNewProjectName(e.target.value)}
         />
-        <button type="submit" className="add-project-button">+ Add Project</button>
+        <button type="submit" className="add-project-button" aria-label="创建新项目">
+          + Add Project
+        </button>
       </form>
     </section>
   );
