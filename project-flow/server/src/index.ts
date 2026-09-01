@@ -43,7 +43,7 @@ app.use((err: unknown,
   res: express.Response, 
   _next: express.NextFunction
 ) => {
-  console.error('💥 未捕获的服务器异常:', err);
+  console.error('未捕获的服务器异常:', err);
 
   res.status(500).json({
     message : '服务器内部发生错误，请稍后重试',
@@ -52,5 +52,5 @@ app.use((err: unknown,
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 后端 REST API 服务已启动: http://localhost:${PORT}`);
+  console.log(`后端 REST API 服务已启动: http://localhost:${PORT}`);
 });

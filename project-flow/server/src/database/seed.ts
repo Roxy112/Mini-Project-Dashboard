@@ -1,7 +1,7 @@
 import pool from './pool';
 
 async function seed() {
-  console.log('🌱 正在向 PostgreSQL 写入初始种子数据 (pg)...');
+  console.log('正在向 PostgreSQL 写入初始种子数据 (pg)...');
   const client = await pool.connect();
 
   try {
