@@ -5,11 +5,11 @@
   "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
   "roots": {
     "projects": {
-      "model": "Projects",
+      "model": "Project",
       "namespace": "public"
     },
     "tasks": {
-      "model": "Tasks",
+      "model": "Task",
       "namespace": "public"
     }
   },
@@ -17,7 +17,7 @@
     "namespaces": {
       "public": {
         "models": {
-          "Projects": {
+          "Project": {
             "fields": {
               "id": {
                 "nullable": false,
@@ -46,7 +46,7 @@
                   ]
                 },
                 "to": {
-                  "model": "Tasks",
+                  "model": "Task",
                   "namespace": "public"
                 }
               }
@@ -64,7 +64,7 @@
               "table": "projects"
             }
           },
-          "Tasks": {
+          "Task": {
             "fields": {
               "done": {
                 "nullable": false,
@@ -121,7 +121,7 @@
                   ]
                 },
                 "to": {
-                  "model": "Projects",
+                  "model": "Project",
                   "namespace": "public"
                 }
               }

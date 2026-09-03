@@ -240,11 +240,11 @@ type DefaultLiteralValue<CodecId extends string, Encoded> = CodecId extends keyo
 
 export type FieldOutputTypes = {
   readonly public: {
-    readonly Projects: {
+    readonly Project: {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly name: CodecTypes['pg/text@1']['output'];
     };
-    readonly Tasks: {
+    readonly Task: {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly projectId: CodecTypes['pg/int4@1']['output'];
       readonly text: CodecTypes['pg/text@1']['output'];
@@ -256,11 +256,11 @@ export type FieldOutputTypes = {
 };
 export type FieldInputTypes = {
   readonly public: {
-    readonly Projects: {
+    readonly Project: {
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly name: CodecTypes['pg/text@1']['input'];
     };
-    readonly Tasks: {
+    readonly Task: {
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly projectId: CodecTypes['pg/int4@1']['input'];
       readonly text: CodecTypes['pg/text@1']['input'];
@@ -423,14 +423,14 @@ type ContractBase = Omit<
   readonly target: 'postgres';
   readonly targetFamily: 'sql';
   readonly roots: {
-    readonly projects: { readonly namespace: 'public' & NamespaceId; readonly model: 'Projects' };
-    readonly tasks: { readonly namespace: 'public' & NamespaceId; readonly model: 'Tasks' };
+    readonly projects: { readonly namespace: 'public' & NamespaceId; readonly model: 'Project' };
+    readonly tasks: { readonly namespace: 'public' & NamespaceId; readonly model: 'Task' };
   };
   readonly domain: {
     readonly namespaces: {
       readonly public: {
         readonly models: {
-          readonly Projects: {
+          readonly Project: {
             readonly fields: {
               readonly id: {
                 readonly nullable: false;
@@ -443,10 +443,7 @@ type ContractBase = Omit<
             };
             readonly relations: {
               readonly tasks: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Tasks';
-                };
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'Task' };
                 readonly cardinality: '1:N';
                 readonly on: {
                   readonly localFields: readonly ['id'];
@@ -463,7 +460,7 @@ type ContractBase = Omit<
               };
             };
           };
-          readonly Tasks: {
+          readonly Task: {
             readonly fields: {
               readonly id: {
                 readonly nullable: false;
@@ -494,7 +491,7 @@ type ContractBase = Omit<
               readonly project: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Projects';
+                  readonly model: 'Project';
                 };
                 readonly cardinality: 'N:1';
                 readonly on: {

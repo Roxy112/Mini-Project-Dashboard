@@ -2,23 +2,23 @@
 // Contract inferred from the live database schema. Edit as needed, then run `prisma contract emit`.
 
 namespace public {
-  model Projects {
+  model Project {
     id    Int     @id(map: "projects_pkey") @default(autoincrement())
     name  String
-    tasks Tasks[]
+    tasks Task[]
 
     @@check(expression: "(TRIM(BOTH FROM name) <> ''::text)", map: "projects_name_check")
     @@map("projects")
   }
 
-  model Tasks {
+  model Task {
     id        Int      @id(map: "tasks_pkey") @default(autoincrement())
     projectId Int      @map("project_id")
     text      String
     done      Boolean  @default(false)
     priority  String   @default("medium")
     dueDate   Date?    @map("due_date")
-    project   Projects @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "tasks_project_id_fkey")
+    project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "tasks_project_id_fkey")
 
     @@index([projectId], map: "idx_tasks_project_id")
     @@check(expression: "(priority = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text]))", map: "tasks_priority_check")
