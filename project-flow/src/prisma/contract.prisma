@@ -25,10 +25,4 @@ namespace public {
     @@check(expression: "(TRIM(BOTH FROM text) <> ''::text)", map: "tasks_text_check")
     @@map("tasks")
   }
-
-  native_enum Priority {
-    low = "low"
-    medium = "medium"
-    high = "high"
-  }
 }

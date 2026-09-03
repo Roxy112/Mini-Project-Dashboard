@@ -159,17 +159,6 @@
     "namespaces": {
       "public": {
         "entries": {
-          "native_enum": {
-            "Priority": {
-              "kind": "postgres-enum",
-              "members": [
-                "low",
-                "medium",
-                "high"
-              ],
-              "typeName": "Priority"
-            }
-          },
           "table": {
             "projects": {
               "checks": [
@@ -296,23 +285,13 @@
               },
               "uniques": []
             }
-          },
-          "valueSet": {
-            "Priority": {
-              "kind": "valueSet",
-              "values": [
-                "low",
-                "medium",
-                "high"
-              ]
-            }
           }
         },
         "id": "public",
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "869257cfe1ab85db2bb6408edaaa175dcf233bd5bea3d15603afd2208c4a0fee"
+    "storageHash": "97116191f165a1651b0e71fa233f7ff4c76210cd4bade1cb645814e7245d54b7"
   },
   "capabilities": {
     "postgres": {
