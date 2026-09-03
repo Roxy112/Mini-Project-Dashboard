@@ -11,7 +11,7 @@ This project is set up for PostgreSQL. Prisma Next also supports other databases
 
 ## Your data contract
 
-Your data contract is the heart of your application. It lives at [`src/prisma/contract.prisma`](src/prisma/contract.prisma) and describes your models:
+Your data contract is the heart of your application. It lives at [`server/src/prisma/contract.prisma`](server/src/prisma/contract.prisma) and describes your models:
 
 ```prisma
 model User {
@@ -25,7 +25,7 @@ model User {
 Every model you define in your contract can be queried from your app. Your editor will autocomplete the query methods and show you what type each model field is:
 
 ```typescript
-import { db } from './src/prisma/db';
+import { db } from './server/src/prisma/db';
 
 const user = await db.orm.public.User
   .where({ email: 'alice@example.com' })
@@ -55,7 +55,7 @@ import { defineConfig as ormConfig } from '@prisma/orm-postgres/config';
 
 export default definePrismaConfig({
   orm: ormConfig({
-    contract: './src/prisma/contract.prisma',
+    contract: './server/src/prisma/contract.prisma',
     db: {
       connection: process.env['DATABASE_URL']!,
     },
@@ -85,15 +85,15 @@ npx prisma migration status    # Show migration status
 
 | File | Purpose |
 |---|---|
-| [`src/prisma/contract.prisma`](src/prisma/contract.prisma) | Your data contract — define your models here |
+| [`server/src/prisma/contract.prisma`](server/src/prisma/contract.prisma) | Your data contract — define your models here |
 | [`prisma.config.ts`](prisma.config.ts) | CLI configuration |
-| [`src/prisma/db.ts`](src/prisma/db.ts) | Database client — `import { db } from './src/prisma/db'` |
-| `src/prisma/contract.json` | Compiled contract (generated) |
-| `src/prisma/contract.d.ts` | Contract types (generated) |
+| [`server/src/prisma/db.ts`](server/src/prisma/db.ts) | Database client — `import { db } from './server/src/prisma/db'` |
+| `server/src/prisma/contract.json` | Compiled contract (generated) |
+| `server/src/prisma/contract.d.ts` | Contract types (generated) |
 
 ### Workflow
 
-1. Edit [`src/prisma/contract.prisma`](src/prisma/contract.prisma) to add or change models.
+1. Edit [`server/src/prisma/contract.prisma`](server/src/prisma/contract.prisma) to add or change models.
 2. Run `npx prisma contract emit` to regenerate the contract.
 3. Query your models — your IDE will autocomplete everything.
 
