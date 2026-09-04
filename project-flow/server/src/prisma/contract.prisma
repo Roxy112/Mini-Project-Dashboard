@@ -1,0 +1,28 @@
+// use prisma-next
+// Contract inferred from the live database schema. Edit as needed, then run `prisma contract emit`.
+
+namespace public {
+  model Project {
+    id    Int     @id(map: "projects_pkey") @default(autoincrement())
+    name  String
+    tasks Task[]
+
+    @@check(expression: "(TRIM(BOTH FROM name) <> ''::text)", map: "projects_name_check")
+    @@map("projects")
+  }
+
+  model Task {
+    id        Int      @id(map: "tasks_pkey") @default(autoincrement())
+    projectId Int      @map("project_id")
+    text      String
+    done      Boolean  @default(false)
+    priority  String   @default("medium")
+    dueDate   Date?    @map("due_date")
+    project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "tasks_project_id_fkey")
+
+    @@index([projectId], map: "idx_tasks_project_id")
+    @@check(expression: "(priority = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text]))", map: "tasks_priority_check")
+    @@check(expression: "(TRIM(BOTH FROM text) <> ''::text)", map: "tasks_text_check")
+    @@map("tasks")
+  }
+}

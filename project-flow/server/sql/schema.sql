@@ -5,6 +5,8 @@
 -- 1. 清理已有表（按依赖反向删除）
 DROP TABLE IF EXISTS tasks CASCADE;
 DROP TABLE IF EXISTS projects CASCADE;
+DROP TYPE IF EXISTS "Priority" CASCADE;
+DROP TYPE IF EXISTS priority CASCADE;
 
 -- 2. 创建 projects 表
 CREATE TABLE projects (

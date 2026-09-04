@@ -43,7 +43,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 
     let sql = 'SELECT id, project_id AS "projectId", text, done, priority, due_date AS "dueDate" FROM tasks';
-    const params: any[] = [];
+    const params: number[] = [];
 
     if (projectId !== undefined) {
       sql += ' WHERE project_id = $1';
@@ -59,6 +59,13 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 const VALID_PRIORITIES = ['low', 'medium', 'high'] as const;
+
+/**
+ * 类型守卫：校验未知输入是否为合法的 Priority
+ */
+function isPriority(value: unknown): value is Priority {
+  return typeof value === 'string' && (VALID_PRIORITIES as readonly string[]).includes(value);
+}
 
 /**
  * 校验字符串是否为合法的 YYYY-MM-DD 格式且日历有效
@@ -111,10 +118,10 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 
     let taskPriority: Priority = 'medium';
     if (priority !== undefined) {
-      if (typeof priority !== 'string' || !VALID_PRIORITIES.includes(priority as any)) {
+      if (!isPriority(priority)) {
         return res.status(400).json({ message: '优先级必须为 low, medium 或 high' });
       }
-      taskPriority = priority as Priority;
+      taskPriority = priority;
     }
 
     if (dueDate !== undefined && dueDate !== null && dueDate !== '') {
@@ -148,8 +155,9 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
 
     // 1. 严格白名单解构（忽略 req.body 中的 id, projectId 和任何未知字段）
     const { text, done, priority, dueDate } = req.body || {};
+    type TaskSqlValue = string | number | boolean | null;
     const setClauses: string[] = [];
-    const values: any[] = [];
+    const values: TaskSqlValue[] = [];
 
     // 2. text 字段校验 (string & trim 后非空，最长 500 字符)
     if (text !== undefined) {
@@ -175,7 +183,7 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
 
     // 4. priority 字段校验 ('low' | 'medium' | 'high')
     if (priority !== undefined) {
-      if (typeof priority !== 'string' || !VALID_PRIORITIES.includes(priority as any)) {
+      if (!isPriority(priority)) {
         return res.status(400).json({ message: '优先级必须为 low, medium 或 high' });
       }
       values.push(priority);
