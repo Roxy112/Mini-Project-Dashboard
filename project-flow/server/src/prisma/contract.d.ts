@@ -33,7 +33,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'97116191f165a1651b0e71fa233f7ff4c76210cd4bade1cb645814e7245d54b7'>;
+  StorageHashBase<'ab95f7c60a725008847fc11cf36a4bae75f0b0b5abc7c5110147e7da4d3736c2'>;
 export type ExecutionHash = ExecutionHashBase<string>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
@@ -250,7 +250,7 @@ export type FieldOutputTypes = {
       readonly text: CodecTypes['pg/text@1']['output'];
       readonly done: CodecTypes['pg/bool@1']['output'];
       readonly priority: CodecTypes['pg/text@1']['output'];
-      readonly dueDate: CodecTypes['pg/date-temporal@1']['output'] | null;
+      readonly dueDate: CodecTypes['pg/date-string@1']['output'] | null;
     };
   };
 };
@@ -266,7 +266,7 @@ export type FieldInputTypes = {
       readonly text: CodecTypes['pg/text@1']['input'];
       readonly done: CodecTypes['pg/bool@1']['input'];
       readonly priority: CodecTypes['pg/text@1']['input'];
-      readonly dueDate: CodecTypes['pg/date-temporal@1']['input'] | null;
+      readonly dueDate: CodecTypes['pg/date-string@1']['input'] | null;
     };
   };
 };
@@ -278,7 +278,7 @@ export type StorageColumnTypes = {
     };
     readonly tasks: {
       readonly done: CodecTypes['pg/bool@1']['output'];
-      readonly due_date: CodecTypes['pg/date-temporal@1']['output'] | null;
+      readonly due_date: CodecTypes['pg/date-string@1']['output'] | null;
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly priority: CodecTypes['pg/text@1']['output'];
       readonly project_id: CodecTypes['pg/int4@1']['output'];
@@ -294,7 +294,7 @@ export type StorageColumnInputTypes = {
     };
     readonly tasks: {
       readonly done: CodecTypes['pg/bool@1']['input'];
-      readonly due_date: CodecTypes['pg/date-temporal@1']['input'] | null;
+      readonly due_date: CodecTypes['pg/date-string@1']['input'] | null;
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly priority: CodecTypes['pg/text@1']['input'];
       readonly project_id: CodecTypes['pg/int4@1']['input'];
@@ -383,7 +383,7 @@ type ContractBase = Omit<
                 };
                 readonly due_date: {
                   readonly nativeType: 'date';
-                  readonly codecId: 'pg/date-temporal@1';
+                  readonly codecId: 'pg/date-string@1';
                   readonly nullable: true;
                 };
               };
@@ -484,7 +484,7 @@ type ContractBase = Omit<
               };
               readonly dueDate: {
                 readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/date-temporal@1' };
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/date-string@1' };
               };
             };
             readonly relations: {

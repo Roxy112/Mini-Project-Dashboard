@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import pool from '../database/pool';
+import { db } from '../prisma/db'; 
 import { Priority } from '../../../shared/types';
 
 const router = Router();
@@ -20,6 +20,8 @@ function formatTask<T extends { dueDate?: Date | string | null }>(
     formattedDate = `${year}-${month}-${day}`;
   } else if (typeof dueDate === 'string') {
     formattedDate = dueDate.split('T')[0] || null;
+  } else if (dueDate && typeof (dueDate as {toString: () => string}).toString === 'function') {
+    formattedDate = String(dueDate).split('T')[0] || null;
   }
 
   return {
@@ -42,17 +44,16 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       projectId = parsed;
     }
 
-    let sql = 'SELECT id, project_id AS "projectId", text, done, priority, due_date AS "dueDate" FROM tasks';
-    const params: number[] = [];
+    const collection = projectId !== undefined
+      ? db.orm.public.Task.where({ projectId })
+      : db.orm.public.Task;
 
-    if (projectId !== undefined) {
-      sql += ' WHERE project_id = $1';
-      params.push(projectId);
-    }
-    sql += ' ORDER BY id ASC;';
+    const tasks = await collection
+      .select("id", "projectId", "text", "done", "priority", "dueDate")
+      .orderBy((task) => task.id.asc())
+      .all();
 
-    const result = await pool.query(sql, params);
-    res.json(result.rows.map(formatTask));
+    res.json(tasks.map(formatTask));
   } catch (error) {
     next(error);
   }
@@ -111,8 +112,8 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 
     // 检查关联的项目是否存在
-    const projectCheck = await pool.query('SELECT id FROM projects WHERE id = $1;', [projectId]);
-    if (projectCheck.rowCount === 0) {
+    const project = await db.orm.public.Project.first({id: projectId});
+    if (!project) {
       return res.status(404).json({ message: '所属项目不存在，无法创建任务' });
     }
 
@@ -133,13 +134,13 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       }
     }
 
-    const insertResult = await pool.query(
-      `INSERT INTO tasks (text, priority, project_id, due_date)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, project_id AS "projectId", text, done, priority, due_date AS "dueDate";`,
-      [trimmedText, taskPriority, projectId, dueDate ? dueDate : null]
-    );
-    res.status(201).json(formatTask(insertResult.rows[0]));
+    const newTask = await db.orm.public.Task.create({
+      text: trimmedText,
+      priority: taskPriority,
+      projectId,
+      dueDate: dueDate || null,
+    });
+    res.status(201).json(formatTask(newTask));
   } catch (error) {
     next(error);
   }
@@ -155,9 +156,12 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
 
     // 1. 严格白名单解构（忽略 req.body 中的 id, projectId 和任何未知字段）
     const { text, done, priority, dueDate } = req.body || {};
-    type TaskSqlValue = string | number | boolean | null;
-    const setClauses: string[] = [];
-    const values: TaskSqlValue[] = [];
+    const updateData: {
+      text?: string;
+      done?: boolean;
+      priority?: Priority;
+      dueDate?: string | null;
+    } = {};
 
     // 2. text 字段校验 (string & trim 后非空，最长 500 字符)
     if (text !== undefined) {
@@ -168,8 +172,7 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
       if (trimmed.length > 500) {
         return res.status(400).json({ message: '任务内容长度不能超过 500 个字符' });
       }
-      values.push(trimmed);
-      setClauses.push(`text = $${values.length}`);
+      updateData.text = trimmed;
     }
 
     // 3. done 字段校验 (boolean)
@@ -177,8 +180,7 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
       if (typeof done !== 'boolean') {
         return res.status(400).json({ message: '任务完成状态必须为布尔值' });
       }
-      values.push(done);
-      setClauses.push(`done = $${values.length}`);
+      updateData.done = done;
     }
 
     // 4. priority 字段校验 ('low' | 'medium' | 'high')
@@ -186,15 +188,13 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
       if (!isPriority(priority)) {
         return res.status(400).json({ message: '优先级必须为 low, medium 或 high' });
       }
-      values.push(priority);
-      setClauses.push(`priority = $${values.length}`);
+      updateData.priority = priority;
     }
 
     // 5. dueDate 字段校验 (YYYY-MM-DD 且不可早于今天，或允许传 null / '' 进行清除)
     if (dueDate !== undefined) {
       if (dueDate === null || dueDate === '') {
-        values.push(null);
-        setClauses.push(`due_date = $${values.length}`);
+        updateData.dueDate = null;
       } else {
         if (!isValidDateString(dueDate)) {
           return res.status(400).json({ message: '截止日期必须为合法的 YYYY-MM-DD 格式 (例如: 2026-08-30)' });
@@ -202,25 +202,24 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
         if (dueDate < getTodayDateString()) {
           return res.status(400).json({ message: '截止日期不能早于今天' });
         }
-        values.push(dueDate);
-        setClauses.push(`due_date = $${values.length}`);
+        updateData.dueDate = dueDate;
       }
     }
 
     // 6. 检查是否提供了至少一个有效可更新字段
-    if (setClauses.length === 0) {
+    if (Object.keys(updateData).length === 0) {
       return res.status(400).json({ message: '未提供任何有效的可更新字段' });
     }
 
-    // 7. 向数据库执行参数化更新
-    values.push(id);
-    const sql = `UPDATE tasks SET ${setClauses.join(', ')} WHERE id = $${values.length} RETURNING id, project_id AS "projectId", text, done, priority, due_date AS "dueDate";`;
+    // 7. 执行更新
+    const updatedTask = await db.orm.public.Task
+      .where({ id })
+      .update(updateData);
 
-    const updateResult = await pool.query(sql, values);
-    if (updateResult.rowCount === 0) {
+    if (!updatedTask) {
       return res.status(404).json({ message: '未找到指定任务' });
     }
-    res.json(formatTask(updateResult.rows[0]));
+    res.json(formatTask(updatedTask));
   } catch (error) {
     next(error);
   }
@@ -234,8 +233,10 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
       return res.status(400).json({ message: '无效的任务 ID，必须为正整数' });
     }
 
-    const deleteResult = await pool.query('DELETE FROM tasks WHERE id = $1 RETURNING id;', [id]);
-    if (deleteResult.rowCount === 0) {
+    const deletedTask = await db.orm.public.Task
+      .where({ id })
+      .delete();
+    if (!deletedTask) {
       return res.status(404).json({ message: '未找到指定任务' });
     }
     res.json({ message: '任务删除成功' });
