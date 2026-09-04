@@ -17,7 +17,7 @@ namespace public {
     text      String
     done      Boolean  @default(false)
     priority  String   @default("medium")
-    dueDate   Date?    @map("due_date")
+    dueDate   DateString?    @map("due_date")
     project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "tasks_project_id_fkey")
 
     @@index([projectId], map: "idx_tasks_project_id")

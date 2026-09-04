@@ -7,6 +7,7 @@ const router = Router();
 router.get('/', async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const projects = await db.orm.public.Project
+      .select("id", "name")
       .orderBy((project) => project.id.asc())
       .all();
     res.status(200).json(projects);
@@ -44,11 +45,12 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
       return res.status(400).json({ message: '无效的项目 ID,必须为正整数' });
     }
 
-    const target = await db.orm.public.Project.first({ id });
-    if (!target) {
+    const deletedProject = await db.orm.public.Project
+      .where({ id })
+      .delete();
+    if (!deletedProject) {
       return res.status(404).json({ message: '未找到指定项目' });
     }
-    await db.orm.public.Project.where({ id }).delete();
     res.json({ message: '项目删除成功' });
   } catch (error) {
     next(error);

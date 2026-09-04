@@ -76,7 +76,7 @@
               "dueDate": {
                 "nullable": true,
                 "type": {
-                  "codecId": "pg/date-temporal@1",
+                  "codecId": "pg/date-string@1",
                   "kind": "scalar"
                 }
               },
@@ -215,7 +215,7 @@
                   "nullable": false
                 },
                 "due_date": {
-                  "codecId": "pg/date-temporal@1",
+                  "codecId": "pg/date-string@1",
                   "nativeType": "date",
                   "nullable": true
                 },
@@ -291,7 +291,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "97116191f165a1651b0e71fa233f7ff4c76210cd4bade1cb645814e7245d54b7"
+    "storageHash": "ab95f7c60a725008847fc11cf36a4bae75f0b0b5abc7c5110147e7da4d3736c2"
   },
   "capabilities": {
     "postgres": {
