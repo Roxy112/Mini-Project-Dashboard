@@ -4,31 +4,6 @@ import { Priority } from '../../../shared/types';
 
 const router = Router();
 
-/**
- * 格式化任务返回对象，严格提取为 YYYY-MM-DD 字符串或 null，覆盖原 dueDate 属性类型
- */
-function formatTask<T extends { dueDate?: Date | string | null }>(
-  task: T
-): Omit<T, 'dueDate'> & { dueDate: string | null } {
-  const { dueDate, ...rest } = task;
-  let formattedDate: string | null = null;
-
-  if (dueDate instanceof Date) {
-    const year = dueDate.getFullYear();
-    const month = String(dueDate.getMonth() + 1).padStart(2, '0');
-    const day = String(dueDate.getDate()).padStart(2, '0');
-    formattedDate = `${year}-${month}-${day}`;
-  } else if (typeof dueDate === 'string') {
-    formattedDate = dueDate.split('T')[0] || null;
-  } else if (dueDate && typeof (dueDate as {toString: () => string}).toString === 'function') {
-    formattedDate = String(dueDate).split('T')[0] || null;
-  }
-
-  return {
-    ...rest,
-    dueDate: formattedDate,
-  } as Omit<T, 'dueDate'> & { dueDate: string | null };
-}
 
 // GET /api/tasks - 获取任务列表（支持可选 query ?projectId=xxx）
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
@@ -53,7 +28,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       .orderBy((task) => task.id.asc())
       .all();
 
-    res.json(tasks.map(formatTask));
+    res.json(tasks);
   } catch (error) {
     next(error);
   }
@@ -111,12 +86,6 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       return res.status(400).json({ message: '所属项目 ID 无效，必须为正整数' });
     }
 
-    // 检查关联的项目是否存在
-    const project = await db.orm.public.Project.first({id: projectId});
-    if (!project) {
-      return res.status(404).json({ message: '所属项目不存在，无法创建任务' });
-    }
-
     let taskPriority: Priority = 'medium';
     if (priority !== undefined) {
       if (!isPriority(priority)) {
@@ -140,8 +109,21 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       projectId,
       dueDate: dueDate || null,
     });
-    res.status(201).json(formatTask(newTask));
+    res.status(201).json(newTask);
   } catch (error) {
+    // 捕获外键约束异常 (PostgreSQL SQLSTATE 23503: foreign_key_violation)
+    const dbError = error as {
+      sqlState?: string;
+      constraint?: string;
+      cause?: { constraint?: string; code?: string };
+    };
+    if (
+      dbError?.sqlState === '23503' ||
+      dbError?.constraint === 'tasks_project_id_fkey' ||
+      dbError?.cause?.constraint === 'tasks_project_id_fkey'
+    ) {
+      return res.status(404).json({ message: '所属项目不存在，无法创建任务' });
+    }
     next(error);
   }
 });
@@ -219,7 +201,7 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
     if (!updatedTask) {
       return res.status(404).json({ message: '未找到指定任务' });
     }
-    res.json(formatTask(updatedTask));
+    res.json(updatedTask);
   } catch (error) {
     next(error);
   }
