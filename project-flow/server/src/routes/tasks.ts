@@ -86,12 +86,6 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       return res.status(400).json({ message: '所属项目 ID 无效，必须为正整数' });
     }
 
-    // 检查关联的项目是否存在
-    const project = await db.orm.public.Project.first({id: projectId});
-    if (!project) {
-      return res.status(404).json({ message: '所属项目不存在，无法创建任务' });
-    }
-
     let taskPriority: Priority = 'medium';
     if (priority !== undefined) {
       if (!isPriority(priority)) {
@@ -117,6 +111,19 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     });
     res.status(201).json(newTask);
   } catch (error) {
+    // 捕获外键约束异常 (PostgreSQL SQLSTATE 23503: foreign_key_violation)
+    const dbError = error as {
+      sqlState?: string;
+      constraint?: string;
+      cause?: { constraint?: string; code?: string };
+    };
+    if (
+      dbError?.sqlState === '23503' ||
+      dbError?.constraint === 'tasks_project_id_fkey' ||
+      dbError?.cause?.constraint === 'tasks_project_id_fkey'
+    ) {
+      return res.status(404).json({ message: '所属项目不存在，无法创建任务' });
+    }
     next(error);
   }
 });
