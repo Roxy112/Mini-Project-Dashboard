@@ -66,6 +66,13 @@
           },
           "Task": {
             "fields": {
+              "description": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "done": {
                 "nullable": false,
                 "type": {
@@ -128,6 +135,9 @@
             },
             "storage": {
               "fields": {
+                "description": {
+                  "column": "description"
+                },
                 "done": {
                   "column": "done"
                 },
@@ -205,6 +215,11 @@
                 }
               ],
               "columns": {
+                "description": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "done": {
                   "codecId": "pg/bool@1",
                   "default": {
@@ -291,7 +306,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "ab95f7c60a725008847fc11cf36a4bae75f0b0b5abc7c5110147e7da4d3736c2"
+    "storageHash": "1e436c83e26bc9f8e64341a4a93ec693f00ac4103328831ca875046154468461"
   },
   "capabilities": {
     "postgres": {

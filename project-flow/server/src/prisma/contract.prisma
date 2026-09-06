@@ -19,6 +19,7 @@ namespace public {
     priority  String   @default("medium")
     dueDate   DateString?    @map("due_date")
     project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "tasks_project_id_fkey")
+    description String?
 
     @@index([projectId], map: "idx_tasks_project_id")
     @@check(expression: "(priority = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text]))", map: "tasks_priority_check")
