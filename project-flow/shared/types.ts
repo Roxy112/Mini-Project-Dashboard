@@ -1,3 +1,4 @@
+/** 前后端共享的核心实体与优先级类型 */
 export type Priority = 'low' | 'medium' | 'high';
 
 export interface Project {

@@ -46,7 +46,7 @@ app.use((err: unknown,
   console.error('未捕获的服务器异常:', err);
 
   res.status(500).json({
-    message: '服务器内部发生错误，请稍后重试',
+    message: '服务器内部发生错误, 请稍后重试',
     timestamp: new Date().toISOString(),
   });
 });
@@ -55,7 +55,7 @@ const server = app.listen(PORT, () => {
   console.log(`后端 REST API 服务已启动: http://localhost:${PORT}`);
 });
 
-// 优雅停机控制器（具备幂等守卫、超时强制退出保护和统一异常收敛）
+// 优雅停机控制器 (具备幂等守卫/超时强制退出保护/统一异常收敛)
 let isShuttingDown = false;
 
 export const gracefulShutdown = async (reason: string, exitCode = 0) => {
@@ -67,7 +67,7 @@ export const gracefulShutdown = async (reason: string, exitCode = 0) => {
 
   // 10 秒强制退出兜底保护
   const forceExitTimer = setTimeout(() => {
-    console.error('[Shutdown] 优雅停机超时 (10s)，强制退出进程');
+    console.error('[Shutdown] 优雅停机超时 (10s), 强制退出进程');
     process.exit(1);
   }, 10000);
   forceExitTimer.unref();
@@ -92,7 +92,7 @@ export const gracefulShutdown = async (reason: string, exitCode = 0) => {
 
 // 统一绑定致命数据库错误退出
 registerFatalErrorHandler((err: Error) => {
-  console.error('[Fatal DB Error] 捕获数据库客户端致命异常，执行停机:', err);
+  console.error('[Fatal DB Error] 捕获数据库客户端致命异常, 执行停机:', err);
   gracefulShutdown('Fatal Database Error', 1);
 });
 

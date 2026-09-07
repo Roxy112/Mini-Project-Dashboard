@@ -53,7 +53,7 @@ async function runTimezoneVerification() {
 
     // 6. 清理测试数据
     await client.query('DELETE FROM projects WHERE id = $1;', [projectId]);
-    console.log('✅ 多时区往返一致性验证全部通过！');
+    console.log('✅ 多时区往返一致性验证全部通过!');
   } finally {
     client.release();
     await pool.end();

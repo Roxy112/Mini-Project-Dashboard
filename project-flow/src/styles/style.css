@@ -233,7 +233,7 @@ hr {
     background-color: #fef2f2;
 }
 
-/* 当左侧按钮是激活状态时，稍微调整右侧删除按钮的边框，以保持视觉统一 */
+/* 当左侧按钮是激活状态时, 稍微调整右侧删除按钮的边框, 以保持视觉统一 */
 .project-item-wrapper:has(.project-btn.active) .delete-project-btn {
     border-color: #111;
 }
@@ -506,4 +506,57 @@ hr {
 .empty-state .empty-subtitle {
     font-size: 13px;
     color: #94a3b8;
+}
+
+/* 6. 任务描述与编辑样式 */
+.task-info {
+    flex-grow: 1;
+    min-width: 0;
+    margin-right: 12px;
+}
+
+.task-text-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.task-desc {
+    margin: 4px 0 0 0;
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.edit-task-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.edit-task-desc-input {
+    padding: 4px 8px;
+    font-size: 13px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    outline: none;
+    color: #4b5563;
+}
+
+.edit-task-desc-input:focus {
+    border-color: #3b82f6;
+}
+
+.task-badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+#new-task-desc {
+    flex-grow: 1;
+    max-width: 240px;
 }

@@ -50,61 +50,67 @@ export default function Tasks({
   onDeleteTask,
 }: TasksProps): React.JSX.Element {
   const [newTaskText, setNewTaskText] = useState('');
+  const [newTaskDescription, setNewTaskDescription] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState<Priority>('medium');
   const [newTaskDate, setNewTaskDate] = useState<string>(getTodayDateString);
 
   // 行内编辑状态
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [editingText, setEditingText] = useState<string>('');
+  const [editingDescription, setEditingDescription] = useState<string>('');
 
   const hasActiveProject = activeProjectId !== null;
 
-  // 当切换所属项目时，自动清理当前行内编辑状态
+  // 当切换所属项目时, 自动清理当前行内编辑状态
   useEffect(() => {
     setEditingTaskId(null);
     setEditingText('');
+    setEditingDescription('');
   }, [activeProjectId]);
 
-  // 过滤任务
-  let filteredTasks = tasks.filter(task => task.projectId === activeProjectId);
-
-  if (filterStatus === 'active') {
-    filteredTasks = filteredTasks.filter(t => !t.done);
-  } else if (filterStatus === 'completed') {
-    filteredTasks = filteredTasks.filter(t => t.done);
-  }
-
-  if (filterPriority !== 'all') {
-    filteredTasks = filteredTasks.filter(t => t.priority === filterPriority);
-  }
+  // 使用 useMemo 缓存过滤计算结果, 避免无关状态变更触发重复运算
+  const filteredTasks = React.useMemo(() => {
+    let result = tasks.filter(task => task.projectId === activeProjectId);
+    if (filterStatus === 'active') {
+      result = result.filter(t => !t.done);
+    } else if (filterStatus === 'completed') {
+      result = result.filter(t => t.done);
+    }
+    if (filterPriority !== 'all') {
+      result = result.filter(t => t.priority === filterPriority);
+    }
+    return result;
+  }, [tasks, activeProjectId, filterStatus, filterPriority]);
 
   // 提交新建任务
   const handleAddTaskSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (activeProjectId === null) {
-      alert('请先添加或选择一个项目！');
+      alert('请先添加或选择一个项目!');
       return;
     }
 
     const trimmed = newTaskText.trim();
     if (!trimmed) {
-      alert('请输入任务内容！');
+      alert('请输入任务内容!');
       return;
     }
 
     const todayStr = getTodayDateString();
     if (newTaskDate && newTaskDate < todayStr) {
-      alert('截止日期不能早于今天！');
+      alert('截止日期不能早于今天!');
       return;
     }
 
     onAddTask({
       text: trimmed,
       priority: newTaskPriority,
-      dueDate: newTaskDate,
+      dueDate: newTaskDate || undefined,
+      description: newTaskDescription.trim() || null,
     });
 
     setNewTaskText('');
+    setNewTaskDescription('');
     setNewTaskDate(getTodayDateString());
   };
 
@@ -112,24 +118,30 @@ export default function Tasks({
   const handleStartEdit = (task: Task) => {
     setEditingTaskId(task.id);
     setEditingText(task.text);
+    setEditingDescription(task.description || '');
   };
 
   // 保存行内编辑
   const handleSaveEdit = (id: number) => {
     const trimmed = editingText.trim();
     if (!trimmed) {
-      alert('任务内容不能为空！');
+      alert('任务内容不能为空!');
       return;
     }
-    onUpdateTask(id, { text: trimmed });
+    onUpdateTask(id, {
+      text: trimmed,
+      description: editingDescription.trim() || null,
+    });
     setEditingTaskId(null);
     setEditingText('');
+    setEditingDescription('');
   };
 
   // 取消行内编辑
   const handleCancelEdit = () => {
     setEditingTaskId(null);
     setEditingText('');
+    setEditingDescription('');
   };
 
   return (
@@ -191,34 +203,63 @@ export default function Tasks({
                     onChange={e => onUpdateTask(task.id, { done: e.target.checked })}
                   />
 
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      className="edit-task-input"
-                      aria-label={`正在编辑任务 "${task.text}"`}
-                      value={editingText}
-                      autoFocus
-                      onChange={e => setEditingText(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') {
-                          handleSaveEdit(task.id);
-                        } else if (e.key === 'Escape') {
-                          handleCancelEdit();
-                        }
-                      }}
-                    />
-                  ) : (
-                    <span className={`item-task ${task.done ? 'line-through' : ''}`}>
-                      {task.text}
-                    </span>
-                  )}
+                  <div className="task-info">
+                    {isEditing ? (
+                      <div className="edit-task-fields">
+                        <input
+                          type="text"
+                          className="edit-task-input"
+                          aria-label={`正在编辑任务 "${task.text}"`}
+                          value={editingText}
+                          placeholder="任务内容"
+                          autoFocus
+                          onChange={e => setEditingText(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              handleSaveEdit(task.id);
+                            } else if (e.key === 'Escape') {
+                              handleCancelEdit();
+                            }
+                          }}
+                        />
+                        <input
+                          type="text"
+                          className="edit-task-desc-input"
+                          aria-label={`正在编辑任务 "${task.text}" 的描述`}
+                          value={editingDescription}
+                          placeholder="任务描述 (可选)"
+                          onChange={e => setEditingDescription(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              handleSaveEdit(task.id);
+                            } else if (e.key === 'Escape') {
+                              handleCancelEdit();
+                            }
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="task-text-wrapper">
+                        <span className={`item-task ${task.done ? 'line-through' : ''}`}>
+                          {task.text}
+                        </span>
+                        {task.description && (
+                          <div className={`task-desc ${task.done ? 'line-through' : ''}`}>
+                            {task.description}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
-                  {dateText && (
-                    <span className="task-date-badge">{dateText}</span>
-                  )}
-                  <span className={`priority-badge prio-${prio}`}>
-                    {prio.toUpperCase()}
-                  </span>
+                  <div className="task-badges">
+                    {dateText && (
+                      <span className="task-date-badge">{dateText}</span>
+                    )}
+                    <span className={`priority-badge prio-${prio}`}>
+                      {prio.toUpperCase()}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="task-actions">
@@ -268,7 +309,18 @@ export default function Tasks({
           onChange={e => setNewTaskText(e.target.value)}
         />
 
-        {/* 日期选择框（设置 min 为今天，禁用旧日期选择） */}
+        <input
+          type="text"
+          id="new-task-desc"
+          className="new-task-desc"
+          aria-label="新任务描述 (可选)"
+          placeholder="任务描述 (可选)"
+          disabled={!hasActiveProject}
+          value={newTaskDescription}
+          onChange={e => setNewTaskDescription(e.target.value)}
+        />
+
+        {/* 日期选择框 (设置 min 为今天, 禁用旧日期选择) */}
         <input
           type="date"
           id="new-task-date"

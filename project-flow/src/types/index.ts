@@ -14,7 +14,7 @@ export interface TaskFormData {
   description?: string | null;
 }
 
-// 创建任务请求参数（发送给 API / 后端）
+// 创建任务请求参数 (发送给 API / 后端)
 export interface CreateTaskParams extends TaskFormData {
   projectId: number;
 }

@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { Pool, PoolConfig, types } from 'pg';
 
-// 强制将 PostgreSQL DATE 类型 (OID 1082) 解析为 YYYY-MM-DD 原始字符串，杜绝时区转换漂移
+// 强制将 PostgreSQL DATE 类型 (OID 1082) 解析为 YYYY-MM-DD 原始字符串, 杜绝时区转换漂移
 types.setTypeParser(1082, (val: string) => val);
 
 // 1. 读取 environment variables 并构建连接配置
@@ -20,10 +20,10 @@ const poolConfig: PoolConfig = process.env.DATABASE_URL
 // 2. 创建 Pool 实例
 export const pool = new Pool(poolConfig);
 
-// 监听连接池事件（日志与异常捕获）
+// 监听连接池事件 (日志与异常捕获)
 pool.on('connect', (client) => {
   console.log('PostgreSQL database pool connected successfully');
-  // 显式锁定当前 Session 的 DateStyle 为 ISO，确保输出格式统一为 YYYY-MM-DD
+  // 显式锁定当前 Session 的 DateStyle 为 ISO, 确保输出格式统一为 YYYY-MM-DD
   client.query("SET DateStyle = 'ISO';").catch((err: Error) => {
     console.error('设置 DateStyle 失败:', err);
   });

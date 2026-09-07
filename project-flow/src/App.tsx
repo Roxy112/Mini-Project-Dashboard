@@ -61,7 +61,7 @@ export default function App(): React.JSX.Element {
       await api.deleteProject(id);
       const remainingProjects = projects.filter(p => p.id !== id);
       setProjects(remainingProjects);
-      // 同步更新前端任务列表（后端已级联删除）
+      // 同步更新前端任务列表 (后端已级联删除)
       setTasks(prev => prev.filter(t => t.projectId !== id));
 
       if (activeProjectId === id) {
@@ -76,7 +76,7 @@ export default function App(): React.JSX.Element {
   // 4. 新增任务
   const handleAddTask = async (formData: TaskFormData) => {
     if (activeProjectId === null) {
-      alert('请先添加或选择一个项目！');
+      alert('请先添加或选择一个项目!');
       return;
     }
 
