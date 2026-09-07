@@ -1,11 +1,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { db } from '../prisma/db'; 
+import { db } from '../prisma/db';
 import { Priority } from '../../../shared/types';
 
 const router = Router();
 
 
-// GET /api/tasks - 获取任务列表（支持可选 query ?projectId=xxx）
+// GET /api/tasks - 获取任务列表 (支持可选 query ?projectId=xxx)
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const projectIdQuery = req.query.projectId;
@@ -14,7 +14,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     if (projectIdQuery !== undefined) {
       const parsed = typeof projectIdQuery === 'string' ? Number(projectIdQuery) : NaN;
       if (!Number.isInteger(parsed) || parsed <= 0) {
-        return res.status(400).json({ message: '查询参数 projectId 无效，必须为正整数' });
+        return res.status(400).json({ message: '查询参数 projectId 无效, 必须为正整数' });
       }
       projectId = parsed;
     }
@@ -24,7 +24,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       : db.orm.public.Task;
 
     const tasks = await collection
-      .select("id", "projectId", "text", "done", "priority", "dueDate")
+      .select('id', 'projectId', 'text', 'done', 'priority', 'dueDate', 'description')
       .orderBy((task) => task.id.asc())
       .all();
 
@@ -37,7 +37,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 const VALID_PRIORITIES = ['low', 'medium', 'high'] as const;
 
 /**
- * 类型守卫：校验未知输入是否为合法的 Priority
+ * 类型守卫: 校验未知输入是否为合法的 Priority
  */
 function isPriority(value: unknown): value is Priority {
   return typeof value === 'string' && (VALID_PRIORITIES as readonly string[]).includes(value);
@@ -73,7 +73,7 @@ function getTodayDateString(): string {
 // POST /api/tasks - 创建新任务
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { text, priority, projectId, dueDate } = req.body || {};
+    const { text, priority, projectId, dueDate, description } = req.body || {};
     if (!text || typeof text !== 'string' || !text.trim()) {
       return res.status(400).json({ message: '任务内容不能为空且必须为字符串' });
     }
@@ -83,7 +83,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 
     if (!Number.isInteger(projectId) || projectId <= 0) {
-      return res.status(400).json({ message: '所属项目 ID 无效，必须为正整数' });
+      return res.status(400).json({ message: '所属项目 ID 无效, 必须为正整数' });
     }
 
     let taskPriority: Priority = 'medium';
@@ -103,11 +103,24 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       }
     }
 
+    let taskDescription: string | null = null;
+    if (description !== undefined && description !== null) {
+      if (typeof description !== 'string') {
+        return res.status(400).json({ message: '任务描述必须为字符串' });
+      }
+      const trimmedDescription = description.trim();
+      if (trimmedDescription.length > 1000) {
+        return res.status(400).json({ message: '任务描述长度不能超过 1000 个字符' });
+      }
+      taskDescription = trimmedDescription || null;
+    }
+
     const newTask = await db.orm.public.Task.create({
       text: trimmedText,
       priority: taskPriority,
       projectId,
       dueDate: dueDate || null,
+      description: taskDescription,
     });
     res.status(201).json(newTask);
   } catch (error) {
@@ -122,30 +135,31 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       dbError?.constraint === 'tasks_project_id_fkey' ||
       dbError?.cause?.constraint === 'tasks_project_id_fkey'
     ) {
-      return res.status(404).json({ message: '所属项目不存在，无法创建任务' });
+      return res.status(404).json({ message: '所属项目不存在, 无法创建任务' });
     }
     next(error);
   }
 });
 
-// PATCH /api/tasks/:id - 部分更新任务（状态、文本、优先级、截止日期）
+// PATCH /api/tasks/:id - 部分更新任务 (状态/文本/优先级/截止日期/描述)
 router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = typeof req.params.id === 'string' ? Number(req.params.id) : NaN;
     if (!Number.isInteger(id) || id <= 0) {
-      return res.status(400).json({ message: '无效的任务 ID，必须为正整数' });
+      return res.status(400).json({ message: '无效的任务 ID, 必须为正整数' });
     }
 
-    // 1. 严格白名单解构（忽略 req.body 中的 id, projectId 和任何未知字段）
-    const { text, done, priority, dueDate } = req.body || {};
+    // 1. 严格白名单解构 (忽略 req.body 中的 id, projectId 和任何未知字段)
+    const { text, done, priority, dueDate, description } = req.body || {};
     const updateData: {
       text?: string;
       done?: boolean;
       priority?: Priority;
       dueDate?: string | null;
+      description?: string | null;
     } = {};
 
-    // 2. text 字段校验 (string & trim 后非空，最长 500 字符)
+    // 2. text 字段校验 (string & trim 后非空, 最长 500 字符)
     if (text !== undefined) {
       if (typeof text !== 'string' || !text.trim()) {
         return res.status(400).json({ message: '任务内容不能为空且必须为字符串' });
@@ -173,7 +187,7 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
       updateData.priority = priority;
     }
 
-    // 5. dueDate 字段校验 (YYYY-MM-DD 且不可早于今天，或允许传 null / '' 进行清除)
+    // 5. dueDate 字段校验 (YYYY-MM-DD 且不可早于今天, 或允许传 null / '' 进行清除)
     if (dueDate !== undefined) {
       if (dueDate === null || dueDate === '') {
         updateData.dueDate = null;
@@ -188,12 +202,27 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
       }
     }
 
-    // 6. 检查是否提供了至少一个有效可更新字段
+    // 6. description 字段校验 (可选, 支持更新/传 null/空字符串清空, 最长 1000 字符)
+    if (description !== undefined) {
+      if (description === null) {
+        updateData.description = null;
+      } else if (typeof description !== 'string') {
+        return res.status(400).json({ message: '任务描述必须为字符串' });
+      } else {
+        const trimmed = description.trim();
+        if (trimmed.length > 1000) {
+          return res.status(400).json({ message: '任务描述长度不能超过 1000 个字符' });
+        }
+        updateData.description = trimmed || null;
+      }
+    }
+
+    // 7. 检查是否提供了至少一个有效可更新字段
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({ message: '未提供任何有效的可更新字段' });
     }
 
-    // 7. 执行更新
+    // 8. 执行更新
     const updatedTask = await db.orm.public.Task
       .where({ id })
       .update(updateData);
@@ -212,7 +241,7 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
   try {
     const id = typeof req.params.id === 'string' ? Number(req.params.id) : NaN;
     if (!Number.isInteger(id) || id <= 0) {
-      return res.status(400).json({ message: '无效的任务 ID，必须为正整数' });
+      return res.status(400).json({ message: '无效的任务 ID, 必须为正整数' });
     }
 
     const deletedTask = await db.orm.public.Task

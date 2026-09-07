@@ -6,14 +6,15 @@ import { Priority, Task } from '../../shared/types';
 export type StatusFilter = 'all' | 'active' | 'completed';
 export type PriorityFilter = 'all' | Priority;
 
-// 表单输入数据（由 Tasks 表单组件收集）
+// 表单输入数据 (由 Tasks 表单组件收集)
 export interface TaskFormData {
   text: string;
   priority: Priority;
   dueDate?: string;
+  description?: string | null;
 }
 
-// 创建任务请求参数（发送给 API / 后端）
+// 创建任务请求参数 (发送给 API / 后端)
 export interface CreateTaskParams extends TaskFormData {
   projectId: number;
 }

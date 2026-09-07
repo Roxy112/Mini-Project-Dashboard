@@ -2,7 +2,7 @@
 -- ProjectFlow - PostgreSQL 数据库初始化脚本
 -- ========================================================
 
--- 1. 清理已有表（按依赖反向删除）
+-- 1. 清理已有表 (按依赖反向删除)
 DROP TABLE IF EXISTS tasks CASCADE;
 DROP TABLE IF EXISTS projects CASCADE;
 DROP TYPE IF EXISTS "Priority" CASCADE;
@@ -21,7 +21,8 @@ CREATE TABLE tasks (
     text TEXT NOT NULL CHECK (trim(text) <> ''),
     done BOOLEAN NOT NULL DEFAULT FALSE,
     priority TEXT NOT NULL DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high')),
-    due_date DATE DEFAULT NULL
+    due_date DATE DEFAULT NULL,
+    description TEXT DEFAULT NULL
 );
 
 -- 4. 创建索引以优化按 project_id 查询任务的性能

@@ -22,7 +22,7 @@ export default function Projects({
     e.preventDefault();
     const trimmed = newProjectName.trim();
     if (!trimmed) {
-      alert('请输入项目名称！');
+      alert('请输入项目名称!');
       return;
     }
     onAddProject(trimmed);
@@ -30,7 +30,7 @@ export default function Projects({
   };
 
   const handleDelete = (id: number) => {
-    if (!confirm('确认删除这个项目以及它的所有任务吗？')) return;
+    if (!confirm('确认删除这个项目以及它的所有任务吗?')) return;
     onDeleteProject(id);
   };
 

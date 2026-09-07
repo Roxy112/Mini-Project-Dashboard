@@ -7,7 +7,7 @@ const router = Router();
 router.get('/', async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const projects = await db.orm.public.Project
-      .select("id", "name")
+      .select('id', 'name')
       .orderBy((project) => project.id.asc())
       .all();
     res.status(200).json(projects);
@@ -37,12 +37,12 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-// DELETE /api/projects/:id - 删除项目（级联删除相关任务）
+// DELETE /api/projects/:id - 删除项目 (级联删除相关任务)
 router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = typeof req.params.id === 'string' ? Number(req.params.id) : NaN;
     if (!Number.isInteger(id) || id <= 0) {
-      return res.status(400).json({ message: '无效的项目 ID,必须为正整数' });
+      return res.status(400).json({ message: '无效的项目 ID, 必须为正整数' });
     }
 
     const deletedProject = await db.orm.public.Project
