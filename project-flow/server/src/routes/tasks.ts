@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { db } from '../prisma/db'; 
+import { db } from '../prisma/db';
 import { Priority } from '../../../shared/types';
 
 const router = Router();
@@ -24,7 +24,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       : db.orm.public.Task;
 
     const tasks = await collection
-      .select("id", "projectId", "text", "done", "priority", "dueDate")
+      .select("id", "projectId", "text", "done", "priority", "dueDate", "description")
       .orderBy((task) => task.id.asc())
       .all();
 
@@ -73,7 +73,7 @@ function getTodayDateString(): string {
 // POST /api/tasks - 创建新任务
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { text, priority, projectId, dueDate } = req.body || {};
+    const { text, priority, projectId, dueDate, description } = req.body || {};
     if (!text || typeof text !== 'string' || !text.trim()) {
       return res.status(400).json({ message: '任务内容不能为空且必须为字符串' });
     }
@@ -103,11 +103,24 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       }
     }
 
+    let taskDescription: string | null = null;
+    if (description !== undefined && description !== null) {
+      if (typeof description !== 'string') {
+        return res.status(400).json({ message: '任务描述必须为字符串' });
+      }
+      const trimmedDescription = description.trim();
+      if (trimmedDescription.length > 1000) {
+        return res.status(400).json({ message: '任务描述长度不能超过 1000 个字符' });
+      }
+      taskDescription = trimmedDescription || null;
+    }
+
     const newTask = await db.orm.public.Task.create({
       text: trimmedText,
       priority: taskPriority,
       projectId,
       dueDate: dueDate || null,
+      description: taskDescription,
     });
     res.status(201).json(newTask);
   } catch (error) {
@@ -128,7 +141,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-// PATCH /api/tasks/:id - 部分更新任务（状态、文本、优先级、截止日期）
+// PATCH /api/tasks/:id - 部分更新任务 (状态、文本、优先级、截止日期、描述)
 router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = typeof req.params.id === 'string' ? Number(req.params.id) : NaN;
@@ -137,12 +150,13 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
     }
 
     // 1. 严格白名单解构（忽略 req.body 中的 id, projectId 和任何未知字段）
-    const { text, done, priority, dueDate } = req.body || {};
+    const { text, done, priority, dueDate, description } = req.body || {};
     const updateData: {
       text?: string;
       done?: boolean;
       priority?: Priority;
       dueDate?: string | null;
+      description?: string | null;
     } = {};
 
     // 2. text 字段校验 (string & trim 后非空，最长 500 字符)
@@ -188,12 +202,27 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
       }
     }
 
-    // 6. 检查是否提供了至少一个有效可更新字段
+    // 6. description 字段校验 (可选，支持更新、传 null/空字符串清空，最长 1000 字符)
+    if (description !== undefined) {
+      if (description === null) {
+        updateData.description = null;
+      } else if (typeof description !== 'string') {
+        return res.status(400).json({ message: '任务描述必须为字符串' });
+      } else {
+        const trimmed = description.trim();
+        if (trimmed.length > 1000) {
+          return res.status(400).json({ message: '任务描述长度不能超过 1000 个字符' });
+        }
+        updateData.description = trimmed || null;
+      }
+    }
+
+    // 7. 检查是否提供了至少一个有效可更新字段
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({ message: '未提供任何有效的可更新字段' });
     }
 
-    // 7. 执行更新
+    // 8. 执行更新
     const updatedTask = await db.orm.public.Task
       .where({ id })
       .update(updateData);

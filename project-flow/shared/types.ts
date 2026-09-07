@@ -12,4 +12,5 @@ export interface Task {
   projectId: number;
   priority: Priority;
   dueDate?: string | null;
+  description?: string | null;
 }
