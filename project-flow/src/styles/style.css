@@ -238,15 +238,13 @@ hr {
     border-color: #111;
 }
 
-/* 新建表单水平对齐 */
-#new-project-form,
-.tasks form {
+/* 新建项目表单水平对齐 */
+#new-project-form {
     display: flex;
     gap: 10px;
 }
 
-#new-project-input,
-#new-task-input {
+#new-project-input {
     flex-grow: 1;
     max-width: 300px;
 }
@@ -284,7 +282,7 @@ hr {
 
 .tasks li {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     padding: 12px 16px;
     background-color: #fff;
@@ -300,7 +298,7 @@ hr {
 
 .tasks .task-content {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     flex-grow: 1;
     min-width: 0;
 }
@@ -309,9 +307,10 @@ hr {
     width: 18px;
     height: 18px;
     margin-right: 12px;
+    margin-top: 2px;
     cursor: pointer;
     accent-color: #111;
-    /* 使选中的复选框变黑 */
+    flex-shrink: 0;
 }
 
 .tasks .item-task {
@@ -330,6 +329,7 @@ hr {
     display: flex;
     gap: 8px;
     flex-shrink: 0;
+    margin-top: 1px;
 }
 
 /* 行内编辑输入框 */
@@ -523,9 +523,10 @@ hr {
 .task-desc {
     margin: 4px 0 0 0;
     font-size: 13px;
-    color: #6b7280;
-    line-height: 1.4;
+    color: #64748b;
+    line-height: 1.5;
     word-break: break-word;
+    white-space: pre-wrap;
 }
 
 .edit-task-fields {
@@ -536,16 +537,23 @@ hr {
 }
 
 .edit-task-desc-input {
-    padding: 4px 8px;
+    padding: 6px 10px;
     font-size: 13px;
     border: 1px solid #d1d5db;
     border-radius: 4px;
     outline: none;
     color: #4b5563;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 50px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    box-sizing: border-box;
 }
 
 .edit-task-desc-input:focus {
     border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
 }
 
 .task-badges {
@@ -553,10 +561,123 @@ hr {
     align-items: center;
     gap: 8px;
     margin-right: 12px;
+    margin-top: 2px;
     flex-shrink: 0;
 }
 
+/* 7. 卡片式新建任务表单 */
+.add-task-form {
+    background-color: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.add-task-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#new-task-input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#new-task-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
 #new-task-desc {
-    flex-grow: 1;
-    max-width: 240px;
+    width: 100%;
+    max-width: 100%;
+    min-height: 54px;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13.5px;
+    line-height: 1.5;
+    outline: none;
+    resize: vertical;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: #fafbfc;
+}
+
+#new-task-desc:focus {
+    background-color: #fff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+#new-task-desc:disabled,
+#new-task-input:disabled {
+    background-color: #f9fafb;
+    border-color: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.add-task-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-top: 4px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.add-task-options {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#new-task-date,
+#new-task-priority {
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    outline: none;
+    font-size: 13px;
+    font-family: inherit;
+    color: #374151;
+    background-color: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.add-task-button {
+    background-color: #111;
+    color: #fff;
+    border: 1px solid #111;
+    border-radius: 6px;
+    padding: 7px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.add-task-button:hover:not(:disabled) {
+    background-color: #333;
+    border-color: #333;
+}
+
+.add-task-button:disabled {
+    background-color: #f3f4f6;
+    border-color: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
 }
