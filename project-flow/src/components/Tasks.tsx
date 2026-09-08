@@ -106,7 +106,7 @@ export default function Tasks({
       text: trimmed,
       priority: newTaskPriority,
       dueDate: newTaskDate || undefined,
-      description: newTaskDescription.trim() || null,
+      description: newTaskDescription.trim(),
     });
 
     setNewTaskText('');
@@ -222,15 +222,15 @@ export default function Tasks({
                             }
                           }}
                         />
-                        <input
-                          type="text"
+                        <textarea
                           className="edit-task-desc-input"
                           aria-label={`正在编辑任务 "${task.text}" 的描述`}
                           value={editingDescription}
                           placeholder="任务描述 (可选)"
+                          rows={2}
                           onChange={e => setEditingDescription(e.target.value)}
                           onKeyDown={e => {
-                            if (e.key === 'Enter') {
+                            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                               handleSaveEdit(task.id);
                             } else if (e.key === 'Escape') {
                               handleCancelEdit();
@@ -298,60 +298,65 @@ export default function Tasks({
       </ul>
 
       {/* 新建任务表单 */}
-      <form onSubmit={handleAddTaskSubmit}>
-        <input
-          type="text"
-          id="new-task-input"
-          aria-label="新任务内容"
-          placeholder={hasActiveProject ? '请输入新任务' : '请先添加或选择一个项目'}
-          disabled={!hasActiveProject}
-          value={newTaskText}
-          onChange={e => setNewTaskText(e.target.value)}
-        />
+      <form className="add-task-form" onSubmit={handleAddTaskSubmit}>
+        <div className="add-task-fields">
+          <input
+            type="text"
+            id="new-task-input"
+            aria-label="新任务内容"
+            placeholder={hasActiveProject ? '请输入新任务内容...' : '请先添加或选择一个项目'}
+            disabled={!hasActiveProject}
+            value={newTaskText}
+            onChange={e => setNewTaskText(e.target.value)}
+          />
 
-        <input
-          type="text"
-          id="new-task-desc"
-          className="new-task-desc"
-          aria-label="新任务描述 (可选)"
-          placeholder="任务描述 (可选)"
-          disabled={!hasActiveProject}
-          value={newTaskDescription}
-          onChange={e => setNewTaskDescription(e.target.value)}
-        />
+          <textarea
+            id="new-task-desc"
+            className="new-task-desc"
+            aria-label="新任务描述 (可选)"
+            placeholder="添加任务描述 (可选)"
+            maxLength={1000}
+            rows={2}
+            disabled={!hasActiveProject}
+            value={newTaskDescription}
+            onChange={e => setNewTaskDescription(e.target.value)}
+          />
+        </div>
 
-        {/* 日期选择框 (设置 min 为今天, 禁用旧日期选择) */}
-        <input
-          type="date"
-          id="new-task-date"
-          aria-label="任务截止日期"
-          min={getTodayDateString()}
-          disabled={!hasActiveProject}
-          value={newTaskDate}
-          onChange={e => setNewTaskDate(e.target.value)}
-        />
+        <div className="add-task-footer">
+          <div className="add-task-options">
+            <input
+              type="date"
+              id="new-task-date"
+              aria-label="任务截止日期"
+              min={getTodayDateString()}
+              disabled={!hasActiveProject}
+              value={newTaskDate}
+              onChange={e => setNewTaskDate(e.target.value)}
+            />
 
-        {/* 优先级下拉框 */}
-        <select
-          id="new-task-priority"
-          aria-label="任务优先级选择"
-          disabled={!hasActiveProject}
-          value={newTaskPriority}
-          onChange={e => setNewTaskPriority(e.target.value as Priority)}
-        >
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-        </select>
+            <select
+              id="new-task-priority"
+              aria-label="任务优先级选择"
+              disabled={!hasActiveProject}
+              value={newTaskPriority}
+              onChange={e => setNewTaskPriority(e.target.value as Priority)}
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
 
-        <button
-          type="submit"
-          className="add-task-button"
-          aria-label="添加新任务"
-          disabled={!hasActiveProject}
-        >
-          + Add Task
-        </button>
+          <button
+            type="submit"
+            className="add-task-button"
+            aria-label="添加新任务"
+            disabled={!hasActiveProject}
+          >
+            + Add Task
+          </button>
+        </div>
       </form>
     </section>
   );

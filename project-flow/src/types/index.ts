@@ -11,7 +11,7 @@ export interface TaskFormData {
   text: string;
   priority: Priority;
   dueDate?: string;
-  description?: string | null;
+  description?: string;
 }
 
 // 创建任务请求参数 (发送给 API / 后端)
