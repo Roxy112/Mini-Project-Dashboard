@@ -74,10 +74,10 @@ export default function App(): React.JSX.Element {
   };
 
   // 4. 新增任务
-  const handleAddTask = async (formData: TaskFormData) => {
+  const handleAddTask = async (formData: TaskFormData): Promise<boolean> => {
     if (activeProjectId === null) {
       alert('请先添加或选择一个项目!');
-      return;
+      return false;
     }
 
     try {
@@ -86,20 +86,24 @@ export default function App(): React.JSX.Element {
         projectId: activeProjectId,
       });
       setTasks(prev => [...prev, newTask]);
+      return true;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '未知错误';
       alert(`创建任务失败: ${message}`);
+      return false;
     }
   };
 
   // 5. 更新任务
-  const handleUpdateTask = async (id: number, updates: UpdateTaskParams) => {
+  const handleUpdateTask = async (id: number, updates: UpdateTaskParams): Promise<boolean> => {
     try {
       const updatedTask = await api.updateTask(id, updates);
       setTasks(prev => prev.map(t => (t.id === id ? updatedTask : t)));
+      return true;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '未知错误';
       alert(`更新任务失败: ${message}`);
+      return false;
     }
   };
 
