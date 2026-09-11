@@ -8,8 +8,8 @@ interface TasksProps {
   filterPriority: PriorityFilter;
   onFilterStatusChange: (status: StatusFilter) => void;
   onFilterPriorityChange: (priority: PriorityFilter) => void;
-  onAddTask: (data: TaskFormData) => void;
-  onUpdateTask: (id: number, updates: UpdateTaskParams) => void;
+  onAddTask: (data: TaskFormData) => Promise<boolean>;
+  onUpdateTask: (id: number, updates: UpdateTaskParams) => Promise<boolean>;
   onDeleteTask: (id: number) => void;
 }
 
@@ -53,11 +53,13 @@ export default function Tasks({
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState<Priority>('medium');
   const [newTaskDate, setNewTaskDate] = useState<string>(getTodayDateString);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // 行内编辑状态
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [editingText, setEditingText] = useState<string>('');
   const [editingDescription, setEditingDescription] = useState<string>('');
+  const [isSavingEdit, setIsSavingEdit] = useState<boolean>(false);
 
   const hasActiveProject = activeProjectId !== null;
 
@@ -83,8 +85,11 @@ export default function Tasks({
   }, [tasks, activeProjectId, filterStatus, filterPriority]);
 
   // 提交新建任务
-  const handleAddTaskSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddTaskSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (isSubmitting) return;
+
     if (activeProjectId === null) {
       alert('请先添加或选择一个项目!');
       return;
@@ -102,16 +107,23 @@ export default function Tasks({
       return;
     }
 
-    onAddTask({
-      text: trimmed,
-      priority: newTaskPriority,
-      dueDate: newTaskDate || undefined,
-      description: newTaskDescription.trim(),
-    });
+    setIsSubmitting(true);
+    try {
+      const success = await onAddTask({
+        text: trimmed,
+        priority: newTaskPriority,
+        dueDate: newTaskDate || undefined,
+        description: newTaskDescription.trim(),
+      });
 
-    setNewTaskText('');
-    setNewTaskDescription('');
-    setNewTaskDate(getTodayDateString());
+      if (success) {
+        setNewTaskText('');
+        setNewTaskDescription('');
+        setNewTaskDate(getTodayDateString());
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // 开始行内编辑
@@ -122,19 +134,29 @@ export default function Tasks({
   };
 
   // 保存行内编辑
-  const handleSaveEdit = (id: number) => {
+  const handleSaveEdit = async (id: number) => {
+    if (isSavingEdit) return;
     const trimmed = editingText.trim();
     if (!trimmed) {
       alert('任务内容不能为空!');
       return;
     }
-    onUpdateTask(id, {
-      text: trimmed,
-      description: editingDescription.trim() || null,
-    });
-    setEditingTaskId(null);
-    setEditingText('');
-    setEditingDescription('');
+    
+    setIsSavingEdit(true);
+    try {
+      const success = await onUpdateTask(id, {
+        text: trimmed,
+        description: editingDescription.trim() || null
+      });
+
+      if (success) {
+        setEditingTaskId(null);
+        setEditingText('');
+        setEditingDescription('');
+      }
+    } finally {
+      setIsSavingEdit(false);
+    }
   };
 
   // 取消行内编辑
@@ -269,8 +291,9 @@ export default function Tasks({
                       className="save-task"
                       aria-label={`保存任务 "${task.text}" 的修改`}
                       onClick={() => handleSaveEdit(task.id)}
+                      disabled={isSavingEdit}
                     >
-                      save
+                      {isSavingEdit ? 'saving...' : 'save'}
                     </button>
                   ) : (
                     <button
@@ -352,9 +375,9 @@ export default function Tasks({
             type="submit"
             className="add-task-button"
             aria-label="添加新任务"
-            disabled={!hasActiveProject}
+            disabled={!hasActiveProject || isSubmitting}
           >
-            + Add Task
+            {isSubmitting ? 'Adding...' : '+ Add Task'}
           </button>
         </div>
       </form>
