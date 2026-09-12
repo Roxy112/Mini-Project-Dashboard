@@ -249,6 +249,7 @@ export default function Tasks({
                           aria-label={`正在编辑任务 "${task.text}" 的描述`}
                           value={editingDescription}
                           placeholder="任务描述 (可选)"
+                          maxLength={1000}
                           rows={2}
                           onChange={e => setEditingDescription(e.target.value)}
                           onKeyDown={e => {
