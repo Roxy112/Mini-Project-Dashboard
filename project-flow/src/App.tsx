@@ -4,7 +4,7 @@ import Sidebar from './components/Sidebar';
 import Projects from './components/Projects';
 import Tasks from './components/Tasks';
 import { api } from './services/api';
-import { Project, Task, TaskFormData, UpdateTaskParams, StatusFilter, PriorityFilter } from './types/index';
+import { Project, Task, TaskFormData, UpdateTaskParams, StatusFilter, PriorityFilter, ActionResult } from './types/index';
 
 export default function App(): React.JSX.Element {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -43,20 +43,30 @@ export default function App(): React.JSX.Element {
     initData();
   }, []);
 
-  // 2. 新增项目
-  const handleAddProject = async (name: string) => {
+  /**
+   * 新增项目处理逻辑
+   * @param name 项目名称
+   * @returns 操作结果 Promise<ActionResult>
+   */
+  const handleAddProject = async (name: string): Promise<ActionResult> => {
     try {
       const newProject = await api.createProject(name);
       setProjects(prev => [...prev, newProject]);
       setActiveProjectId(newProject.id);
+      return { ok: true };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '未知错误';
-      alert(`创建项目失败: ${message}`);
+      return { ok: false, message };
     }
   };
 
-  // 3. 删除项目
-  const handleDeleteProject = async (id: number) => {
+  /**
+   * 删除指定项目处理逻辑
+   * 同步清理本地项目与其关联的所有任务, 若为当前激活项目则自动切换激活项
+   * @param id 要删除的项目 ID
+   * @returns 操作结果 Promise<ActionResult>
+   */
+  const handleDeleteProject = async (id: number): Promise<ActionResult> => {
     try {
       await api.deleteProject(id);
       const remainingProjects = projects.filter(p => p.id !== id);
@@ -67,17 +77,22 @@ export default function App(): React.JSX.Element {
       if (activeProjectId === id) {
         setActiveProjectId(remainingProjects.length > 0 ? remainingProjects[0].id : null);
       }
+
+      return { ok: true };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '未知错误';
-      alert(`删除项目失败: ${message}`);
+      return { ok: false, message };
     }
   };
 
-  // 4. 新增任务
-  const handleAddTask = async (formData: TaskFormData): Promise<boolean> => {
+  /**
+   * 新增任务处理逻辑
+   * @param formData 表单采集的任务信息
+   * @returns 操作结果 Promise<ActionResult>
+   */
+  const handleAddTask = async (formData: TaskFormData): Promise<ActionResult> => {
     if (activeProjectId === null) {
-      alert('请先添加或选择一个项目!');
-      return false;
+      return { ok: false, message: '请先添加或选择一个项目' };
     }
 
     try {
@@ -86,35 +101,43 @@ export default function App(): React.JSX.Element {
         projectId: activeProjectId,
       });
       setTasks(prev => [...prev, newTask]);
-      return true;
+      return { ok: true };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '未知错误';
-      alert(`创建任务失败: ${message}`);
-      return false;
+      return { ok: false, message };
     }
   };
 
-  // 5. 更新任务
-  const handleUpdateTask = async (id: number, updates: UpdateTaskParams): Promise<boolean> => {
+  /**
+   * 更新指定任务处理逻辑
+   * @param id 任务 ID
+   * @param updates 要更新的字段对象
+   * @returns 操作结果 Promise<ActionResult>
+   */
+  const handleUpdateTask = async (id: number, updates: UpdateTaskParams): Promise<ActionResult> => {
     try {
       const updatedTask = await api.updateTask(id, updates);
       setTasks(prev => prev.map(t => (t.id === id ? updatedTask : t)));
-      return true;
+      return { ok: true };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '未知错误';
-      alert(`更新任务失败: ${message}`);
-      return false;
+      return { ok: false, message };
     }
   };
 
-  // 6. 删除任务
-  const handleDeleteTask = async (id: number) => {
+  /**
+   * 删除指定任务处理逻辑
+   * @param id 任务 ID
+   * @returns 操作结果 Promise<ActionResult>
+   */
+  const handleDeleteTask = async (id: number): Promise<ActionResult> => {
     try {
       await api.deleteTask(id);
       setTasks(prev => prev.filter(t => t.id !== id));
+      return { ok: true };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '未知错误';
-      alert(`删除任务失败: ${message}`);
+      return { ok: false, message };
     }
   };
 

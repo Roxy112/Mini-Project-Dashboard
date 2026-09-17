@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Task, Priority, StatusFilter, PriorityFilter, TaskFormData, UpdateTaskParams } from '../types/index';
+import { Task, Priority, StatusFilter, PriorityFilter, TaskFormData, UpdateTaskParams, ActionResult } from '../types/index';
 
 interface TasksProps {
   tasks: Task[];
@@ -8,11 +8,14 @@ interface TasksProps {
   filterPriority: PriorityFilter;
   onFilterStatusChange: (status: StatusFilter) => void;
   onFilterPriorityChange: (priority: PriorityFilter) => void;
-  onAddTask: (data: TaskFormData) => Promise<boolean>;
-  onUpdateTask: (id: number, updates: UpdateTaskParams) => Promise<boolean>;
-  onDeleteTask: (id: number) => void;
+  onAddTask: (data: TaskFormData) => Promise<ActionResult>;
+  onUpdateTask: (id: number, updates: UpdateTaskParams) => Promise<ActionResult>;
+  onDeleteTask: (id: number) => Promise<ActionResult>;
 }
 
+/**
+ * 获取当前日期的 YYYY-MM-DD 格式字符串 (用于日期选择器默认值与最小值)
+ */
 function getTodayDateString(): string {
   const today = new Date();
   const year = today.getFullYear();
@@ -21,6 +24,10 @@ function getTodayDateString(): string {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * 格式化任务截止日期徽章文本 (如 "2026-09-17" 转换为 "Sep 17")
+ * @param dueDate 原始日期字符串
+ */
 function formatDateBadge(dueDate?: string | null): string | null {
   if (!dueDate) return null;
   const parts = dueDate.split('-');
@@ -38,6 +45,9 @@ function formatDateBadge(dueDate?: string | null): string | null {
   return dueDate;
 }
 
+/**
+ * 任务列表展示, 筛选, 创建与编辑组件
+ */
 export default function Tasks({
   tasks,
   activeProjectId,
@@ -84,7 +94,9 @@ export default function Tasks({
     return result;
   }, [tasks, activeProjectId, filterStatus, filterPriority]);
 
-  // 提交新建任务
+  /**
+   * 提交新建任务表单
+   */
   const handleAddTaskSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -109,31 +121,39 @@ export default function Tasks({
 
     setIsSubmitting(true);
     try {
-      const success = await onAddTask({
+      const result = await onAddTask({
         text: trimmed,
         priority: newTaskPriority,
         dueDate: newTaskDate || undefined,
         description: newTaskDescription.trim(),
       });
 
-      if (success) {
+      if (result.ok) {
         setNewTaskText('');
         setNewTaskDescription('');
         setNewTaskDate(getTodayDateString());
+      } else {
+        alert(`创建任务失败: ${result.message}`);
       }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // 开始行内编辑
+  /**
+   * 开启指定任务的行内编辑状态
+   * @param task 当前要编辑的任务对象
+   */
   const handleStartEdit = (task: Task) => {
     setEditingTaskId(task.id);
     setEditingText(task.text);
     setEditingDescription(task.description || '');
   };
 
-  // 保存行内编辑
+  /**
+   * 保存指定任务的行内编辑内容
+   * @param id 任务 ID
+   */
   const handleSaveEdit = async (id: number) => {
     if (isSavingEdit) return;
     const trimmed = editingText.trim();
@@ -144,22 +164,26 @@ export default function Tasks({
     
     setIsSavingEdit(true);
     try {
-      const success = await onUpdateTask(id, {
+      const result = await onUpdateTask(id, {
         text: trimmed,
         description: editingDescription.trim() || null
       });
 
-      if (success) {
+      if (result.ok) {
         setEditingTaskId(null);
         setEditingText('');
         setEditingDescription('');
+      } else {
+        alert(`更新任务失败: ${result.message}`);
       }
     } finally {
       setIsSavingEdit(false);
     }
   };
 
-  // 取消行内编辑
+  /**
+   * 取消当前正在编辑的状态并重置编辑字段
+   */
   const handleCancelEdit = () => {
     setEditingTaskId(null);
     setEditingText('');
@@ -222,7 +246,12 @@ export default function Tasks({
                     className="item-check"
                     aria-label={`标记任务 "${task.text}" 为${task.done ? '未完成' : '已完成'}`}
                     checked={task.done}
-                    onChange={e => onUpdateTask(task.id, { done: e.target.checked })}
+                    onChange={async e => {
+                      const result = await onUpdateTask(task.id, { done: e.target.checked });
+                      if (!result.ok) {
+                        alert(`更新任务状态失败: ${result.message}`);
+                      }
+                    }}
                   />
 
                   <div className="task-info">
@@ -310,7 +339,12 @@ export default function Tasks({
                     type="button"
                     className="delete-task"
                     aria-label={`删除任务 "${task.text}"`}
-                    onClick={() => onDeleteTask(task.id)}
+                    onClick={async () => {
+                      const result = await onDeleteTask(task.id);
+                      if (!result.ok) {
+                        alert(`删除任务失败: ${result.message}`);
+                      }
+                    }}
                   >
                     delete
                   </button>
