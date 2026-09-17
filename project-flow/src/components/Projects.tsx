@@ -1,14 +1,25 @@
 import React, { useState } from 'react';
-import { Project } from '../types/index';
+import { Project, ActionResult } from '../types/index';
 
+/**
+ * Projects 组件 Props 属性定义
+ */
 interface ProjectsProps {
+  /** 项目列表数据 */
   projects: Project[];
+  /** 当前选中的项目 ID, 未选中时为 null */
   activeProjectId: number | null;
+  /** 选中项目时的回调函数 */
   onSelectProject: (id: number) => void;
-  onAddProject: (name: string) => void;
-  onDeleteProject: (id: number) => void;
+  /** 添加新项目回调 (返回 ActionResult) */
+  onAddProject: (name: string) => Promise<ActionResult>;
+  /** 删除指定项目回调 (返回 ActionResult) */
+  onDeleteProject: (id: number) => Promise<ActionResult>;
 }
 
+/**
+ * 项目列表管理与切换组件
+ */
 export default function Projects({
   projects,
   activeProjectId,
@@ -18,20 +29,33 @@ export default function Projects({
 }: ProjectsProps): React.JSX.Element {
   const [newProjectName, setNewProjectName] = useState('');
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  /**
+   * 处理新增项目表单提交事件
+   */
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const trimmed = newProjectName.trim();
     if (!trimmed) {
       alert('请输入项目名称!');
       return;
     }
-    onAddProject(trimmed);
-    setNewProjectName('');
+    const result = await onAddProject(trimmed);
+    if (result.ok) {
+      setNewProjectName('');
+    } else {
+      alert(`创建项目失败: ${result.message}`);
+    }
   };
 
-  const handleDelete = (id: number) => {
+  /**
+   * 处理删除项目点击事件 (包含二次确认弹窗)
+   */
+  const handleDelete = async (id: number) => {
     if (!confirm('确认删除这个项目以及它的所有任务吗?')) return;
-    onDeleteProject(id);
+    const result = await onDeleteProject(id);
+    if (!result.ok) {
+      alert(`删除项目失败: ${result.message}`);
+    }
   };
 
   return (

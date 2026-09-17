@@ -19,5 +19,15 @@ export interface CreateTaskParams extends TaskFormData {
   projectId: number;
 }
 
+/**
+ * 任务更新参数类型 (允许修改除 id 与 projectId 外的字段)
+ */
 export type UpdateTaskParams = Partial<Omit<Task, 'id' | 'projectId'>>;
 
+/**
+ * 统一操作结果类型 (Discriminated Union)
+ * 用于在组件间传递异步操作执行结果与失败信息
+ */
+export type ActionResult =
+  | { ok: true }
+  | { ok: false; message: string };
