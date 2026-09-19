@@ -681,3 +681,16 @@ hr {
     color: #9ca3af;
     cursor: not-allowed;
 }
+
+/* 8. 错误提示样式 */
+.form-error {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1.4;
+    word-break: break-word;
+}
+

@@ -6,6 +6,7 @@ interface TasksProps {
   activeProjectId: number | null;
   filterStatus: StatusFilter;
   filterPriority: PriorityFilter;
+
   onFilterStatusChange: (status: StatusFilter) => void;
   onFilterPriorityChange: (priority: PriorityFilter) => void;
   onAddTask: (data: TaskFormData) => Promise<ActionResult>;
@@ -53,6 +54,7 @@ export default function Tasks({
   activeProjectId,
   filterStatus,
   filterPriority,
+
   onFilterStatusChange,
   onFilterPriorityChange,
   onAddTask,
@@ -65,6 +67,10 @@ export default function Tasks({
   const [newTaskDate, setNewTaskDate] = useState<string>(getTodayDateString);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   // 行内编辑状态
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [editingText, setEditingText] = useState<string>('');
@@ -73,11 +79,15 @@ export default function Tasks({
 
   const hasActiveProject = activeProjectId !== null;
 
-  // 当切换所属项目时, 自动清理当前行内编辑状态
+  // 当切换所属项目时, 自动清理当前行内编辑状态与所有错误提示
   useEffect(() => {
     setEditingTaskId(null);
     setEditingText('');
     setEditingDescription('');
+    // 清空未处理的创建, 编辑与删除错误提示
+    setCreateError(null);
+    setEditError(null);
+    setDeleteError(null);
   }, [activeProjectId]);
 
   // 使用 useMemo 缓存过滤计算结果, 避免无关状态变更触发重复运算
@@ -102,14 +112,21 @@ export default function Tasks({
 
     if (isSubmitting) return;
 
+    // 重置并清除上一次提交的错误提示
+    setCreateError(null);
+    setEditError(null);
+    setDeleteError(null);
+
+    // 校验是否已选择有效项目
     if (activeProjectId === null) {
-      alert('请先添加或选择一个项目!');
+      setCreateError('请先添加或选择一个项目!');
       return;
     }
 
+    // 校验任务文本内容是否为空
     const trimmed = newTaskText.trim();
     if (!trimmed) {
-      alert('请输入任务内容!');
+      setCreateError('请输入任务内容!');
       return;
     }
 
@@ -132,8 +149,11 @@ export default function Tasks({
         setNewTaskText('');
         setNewTaskDescription('');
         setNewTaskDate(getTodayDateString());
+        // 任务创建成功, 确保错误状态已重置
+        setCreateError(null);
       } else {
-        alert(`创建任务失败: ${result.message}`);
+        // 任务创建失败, 设置后端返回的错误信息
+        setCreateError(`创建任务失败: ${result.message}`);
       }
     } finally {
       setIsSubmitting(false);
@@ -148,6 +168,8 @@ export default function Tasks({
     setEditingTaskId(task.id);
     setEditingText(task.text);
     setEditingDescription(task.description || '');
+    // 开始编辑时清除先前的编辑错误提示
+    setEditError(null);
   };
 
   /**
@@ -156,9 +178,12 @@ export default function Tasks({
    */
   const handleSaveEdit = async (id: number) => {
     if (isSavingEdit) return;
+    // 重置编辑错误状态
+    setEditError(null);
     const trimmed = editingText.trim();
     if (!trimmed) {
-      alert('任务内容不能为空!');
+      // 校验编辑内容是否为空
+      setEditError('任务内容不能为空!');
       return;
     }
     
@@ -173,8 +198,11 @@ export default function Tasks({
         setEditingTaskId(null);
         setEditingText('');
         setEditingDescription('');
+        // 更新成功, 重置编辑错误状态
+        setEditError(null);
       } else {
-        alert(`更新任务失败: ${result.message}`);
+        // 更新失败, 设置后端返回的错误信息
+        setEditError(`更新任务失败: ${result.message}`);
       }
     } finally {
       setIsSavingEdit(false);
@@ -188,6 +216,8 @@ export default function Tasks({
     setEditingTaskId(null);
     setEditingText('');
     setEditingDescription('');
+    // 取消编辑时重置错误提示
+    setEditError(null);
   };
 
   return (
@@ -218,6 +248,13 @@ export default function Tasks({
           </select>
         </div>
       </div>
+
+      {/* 删除任务错误提示横幅 (仅在存在删除错误时渲染) */}
+      {deleteError && (
+        <div role="alert" className="form-error" style={{ margin: '0 0 12px 0' }}>
+          {deleteError}
+        </div>
+      )}
 
       <ul>
         {!hasActiveProject ? (
@@ -257,6 +294,12 @@ export default function Tasks({
                   <div className="task-info">
                     {isEditing ? (
                       <div className="edit-task-fields">
+                        {/* 行内编辑错误提示 */}
+                        {editError && (
+                          <div role="alert" className="form-error">
+                            {editError}
+                          </div>
+                        )}
                         <input
                           type="text"
                           className="edit-task-input"
@@ -340,9 +383,12 @@ export default function Tasks({
                     className="delete-task"
                     aria-label={`删除任务 "${task.text}"`}
                     onClick={async () => {
+                      // 重置先前的删除错误提示
+                      setDeleteError(null);
                       const result = await onDeleteTask(task.id);
                       if (!result.ok) {
-                        alert(`删除任务失败: ${result.message}`);
+                        // 删除失败, 设置错误提示文案
+                        setDeleteError(`删除任务 "${task.text}" 失败: ${result.message}`);
                       }
                     }}
                   >
@@ -357,6 +403,12 @@ export default function Tasks({
 
       {/* 新建任务表单 */}
       <form className="add-task-form" onSubmit={handleAddTaskSubmit}>
+        {/* 表单错误提示横幅 (仅在存在错误时渲染) */}
+        {createError && (
+          <div role="alert" className="form-error">
+            {createError}
+          </div>
+        )}
         <div className="add-task-fields">
           <input
             type="text"
