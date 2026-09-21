@@ -8,21 +8,21 @@ const BASE_URL = '/api';
  */
 export class ApiError extends Error {
   /** HTTP 响应状态码 */
-  public readonly statusCode: number;
+  public readonly status: number;
   /** 接口返回的详细错误信息或结构体 */
   public readonly details?: unknown;
 
   /**
    * 创建 ApiError 实例
    * @param message 错误提示信息
-   * @param statusCode HTTP 响应状态码, 默认 500
+   * @param status HTTP 响应状态码, 默认 500
    * @param details 可选的附加错误详情
    */
-  constructor(message: string, statusCode: number = 500, details?: unknown) {
+  constructor(message: string, status: number = 500, details?: unknown) {
     super(message);
 
     this.name = 'ApiError';
-    this.statusCode = statusCode;
+    this.status = status;
     this.details = details;
 
     Object.setPrototypeOf(this, new.target.prototype);

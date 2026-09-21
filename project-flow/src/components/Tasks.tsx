@@ -69,7 +69,7 @@ export default function Tasks({
 
   const [createError, setCreateError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [taskActionError, setTaskActionError] = useState<string | null>(null);
 
   // 行内编辑状态
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
@@ -87,7 +87,7 @@ export default function Tasks({
     // 清空未处理的创建, 编辑与删除错误提示
     setCreateError(null);
     setEditError(null);
-    setDeleteError(null);
+    setTaskActionError(null);
   }, [activeProjectId]);
 
   // 使用 useMemo 缓存过滤计算结果, 避免无关状态变更触发重复运算
@@ -115,7 +115,7 @@ export default function Tasks({
     // 重置并清除上一次提交的错误提示
     setCreateError(null);
     setEditError(null);
-    setDeleteError(null);
+    setTaskActionError(null);
 
     // 校验是否已选择有效项目
     if (activeProjectId === null) {
@@ -132,7 +132,7 @@ export default function Tasks({
 
     const todayStr = getTodayDateString();
     if (newTaskDate && newTaskDate < todayStr) {
-      alert('截止日期不能早于今天!');
+      setCreateError('截止日期不能早于今天!');
       return;
     }
 
@@ -249,10 +249,10 @@ export default function Tasks({
         </div>
       </div>
 
-      {/* 删除任务错误提示横幅 (仅在存在删除错误时渲染) */}
-      {deleteError && (
+      {/* 任务操作错误提示横幅 (更新状态/删除错误) */}
+      {taskActionError && (
         <div role="alert" className="form-error" style={{ margin: '0 0 12px 0' }}>
-          {deleteError}
+          {taskActionError}
         </div>
       )}
 
@@ -284,9 +284,11 @@ export default function Tasks({
                     aria-label={`标记任务 "${task.text}" 为${task.done ? '未完成' : '已完成'}`}
                     checked={task.done}
                     onChange={async e => {
+                      // 重置先前的任务操作错误提示
+                      setTaskActionError(null);
                       const result = await onUpdateTask(task.id, { done: e.target.checked });
                       if (!result.ok) {
-                        alert(`更新任务状态失败: ${result.message}`);
+                        setTaskActionError(`更新任务状态失败: ${result.message}`);
                       }
                     }}
                   />
@@ -384,11 +386,11 @@ export default function Tasks({
                     aria-label={`删除任务 "${task.text}"`}
                     onClick={async () => {
                       // 重置先前的删除错误提示
-                      setDeleteError(null);
+                      setTaskActionError(null);
                       const result = await onDeleteTask(task.id);
                       if (!result.ok) {
                         // 删除失败, 设置错误提示文案
-                        setDeleteError(`删除任务 "${task.text}" 失败: ${result.message}`);
+                        setTaskActionError(`删除任务 "${task.text}" 失败: ${result.message}`);
                       }
                     }}
                   >
