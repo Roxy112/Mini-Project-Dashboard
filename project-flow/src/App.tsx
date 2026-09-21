@@ -3,7 +3,7 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import Projects from './components/Projects';
 import Tasks from './components/Tasks';
-import { api } from './services/api';
+import { api, toFailedActionResult } from './services/api';
 import { Project, Task, TaskFormData, UpdateTaskParams, StatusFilter, PriorityFilter, ActionResult } from './types/index';
 
 export default function App(): React.JSX.Element {
@@ -55,8 +55,7 @@ export default function App(): React.JSX.Element {
       setActiveProjectId(newProject.id);
       return { ok: true };
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : '未知错误';
-      return { ok: false, message };
+      return toFailedActionResult(err);
     }
   };
 
@@ -80,8 +79,7 @@ export default function App(): React.JSX.Element {
 
       return { ok: true };
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : '未知错误';
-      return { ok: false, message };
+      return toFailedActionResult(err);
     }
   };
 
@@ -103,8 +101,7 @@ export default function App(): React.JSX.Element {
       setTasks(prev => [...prev, newTask]);
       return { ok: true };
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : '未知错误';
-      return { ok: false, message };
+      return toFailedActionResult(err);
     }
   };
 
@@ -120,8 +117,7 @@ export default function App(): React.JSX.Element {
       setTasks(prev => prev.map(t => (t.id === id ? updatedTask : t)));
       return { ok: true };
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : '未知错误';
-      return { ok: false, message };
+      return toFailedActionResult(err);
     }
   };
 
@@ -136,8 +132,7 @@ export default function App(): React.JSX.Element {
       setTasks(prev => prev.filter(t => t.id !== id));
       return { ok: true };
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : '未知错误';
-      return { ok: false, message };
+      return toFailedActionResult(err);
     }
   };
 

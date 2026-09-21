@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Project, ActionResult } from '../types/index';
+import { Project, ActionResult, formatErrorMessage } from '../types/index';
 
 /**
  * Projects 组件 Props 属性定义
@@ -43,7 +43,7 @@ export default function Projects({
     if (result.ok) {
       setNewProjectName('');
     } else {
-      alert(`创建项目失败: ${result.message}`);
+      alert(`创建项目失败: ${formatErrorMessage(result)}`);
     }
   };
 
@@ -54,7 +54,7 @@ export default function Projects({
     if (!confirm('确认删除这个项目以及它的所有任务吗?')) return;
     const result = await onDeleteProject(id);
     if (!result.ok) {
-      alert(`删除项目失败: ${result.message}`);
+      alert(`删除项目失败: ${formatErrorMessage(result)}`);
     }
   };
 

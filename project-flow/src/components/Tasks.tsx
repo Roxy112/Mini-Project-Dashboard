@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Task, Priority, StatusFilter, PriorityFilter, TaskFormData, UpdateTaskParams, ActionResult } from '../types/index';
+import { Task, Priority, StatusFilter, PriorityFilter, TaskFormData, UpdateTaskParams, ActionResult, formatErrorMessage } from '../types/index';
 
 interface TasksProps {
   tasks: Task[];
@@ -153,7 +153,7 @@ export default function Tasks({
         setCreateError(null);
       } else {
         // 任务创建失败, 设置后端返回的错误信息
-        setCreateError(`创建任务失败: ${result.message}`);
+        setCreateError(`创建任务失败: ${formatErrorMessage(result)}`);
       }
     } finally {
       setIsSubmitting(false);
@@ -202,7 +202,7 @@ export default function Tasks({
         setEditError(null);
       } else {
         // 更新失败, 设置后端返回的错误信息
-        setEditError(`更新任务失败: ${result.message}`);
+        setEditError(`更新任务失败: ${formatErrorMessage(result)}`);
       }
     } finally {
       setIsSavingEdit(false);
@@ -288,7 +288,7 @@ export default function Tasks({
                       setTaskActionError(null);
                       const result = await onUpdateTask(task.id, { done: e.target.checked });
                       if (!result.ok) {
-                        setTaskActionError(`更新任务状态失败: ${result.message}`);
+                        setTaskActionError(`更新任务状态失败: ${formatErrorMessage(result)}`);
                       }
                     }}
                   />
@@ -390,7 +390,7 @@ export default function Tasks({
                       const result = await onDeleteTask(task.id);
                       if (!result.ok) {
                         // 删除失败, 设置错误提示文案
-                        setTaskActionError(`删除任务 "${task.text}" 失败: ${result.message}`);
+                        setTaskActionError(`删除任务 "${task.text}" 失败: ${formatErrorMessage(result)}`);
                       }
                     }}
                   >

@@ -24,10 +24,26 @@ export interface CreateTaskParams extends TaskFormData {
  */
 export type UpdateTaskParams = Partial<Omit<Task, 'id' | 'projectId'>>;
 
+import { ApiErrorCode, ValidationErrorDetail } from '../../shared/types';
+
 /**
  * 统一操作结果类型 (Discriminated Union)
  * 用于在组件间传递异步操作执行结果与失败信息
  */
 export type ActionResult =
   | { ok: true }
-  | { ok: false; message: string };
+  | { ok: false; message: string; code?: ApiErrorCode; details?: ValidationErrorDetail[] };
+
+/**
+ * 统一格式化错误信息工具函数:
+ * 优先将结构化的 details 字段拼接为易读提示, 无有效明细时回退到顶层 message
+ */
+export function formatErrorMessage(result: { message: string; details?: ValidationErrorDetail[] }): string {
+  if (result.details && result.details.length > 0) {
+    const detailStr = result.details
+      .map(d => d.message || `${d.field}: ${d.issue}`)
+      .join('; ');
+    return `${result.message} (${detailStr})`;
+  }
+  return result.message;
+}
