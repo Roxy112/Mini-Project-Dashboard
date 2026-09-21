@@ -1,29 +1,117 @@
-import { Project, Task, CreateTaskParams, UpdateTaskParams } from '../types/index';
+import {
+  Project,
+  Task,
+  CreateTaskParams,
+  UpdateTaskParams,
+  ApiErrorCode,
+  ValidationErrorDetail,
+  API_ERROR_CODE_SET,
+  VALIDATION_ISSUE_SET,
+  ValidationIssue,
+  ActionResult,
+} from '../types/index';
 
 const BASE_URL = '/api';
 
 /**
+ * 将未知错误安全转换为标准的失败 ActionResult
+ */
+export function toFailedActionResult(err: unknown): Extract<ActionResult, { ok: false }> {
+  if (err instanceof ApiError) {
+    return {
+      ok: false,
+      message: err.message,
+      code: err.code,
+      details: err.details,
+    };
+  }
+  const message = err instanceof Error ? err.message : '未知错误';
+  return { ok: false, message };
+}
+
+/**
+ * 防御式解析后端响应内容为标准错误结构
+ */
+export function parseApiErrorBody(
+  bodyText: string,
+  status: number,
+  statusText: string
+): { message: string; code?: ApiErrorCode; details?: ValidationErrorDetail[]; rawBody: unknown } {
+  let parsed: unknown = null;
+  try {
+    parsed = bodyText ? JSON.parse(bodyText) : null;
+  } catch {
+    parsed = null;
+  }
+
+  let message = `HTTP ${status}${statusText ? ` (${statusText})` : ''}`;
+  let code: ApiErrorCode | undefined = undefined;
+  let details: ValidationErrorDetail[] | undefined = undefined;
+
+  if (parsed && typeof parsed === 'object') {
+    const obj = parsed as Record<string, unknown>;
+    if (typeof obj.message === 'string' && obj.message.trim()) {
+      message = obj.message.trim();
+    }
+    if (typeof obj.code === 'string' && API_ERROR_CODE_SET.has(obj.code)) {
+      code = obj.code as ApiErrorCode;
+    }
+    if (Array.isArray(obj.details)) {
+      const validDetails: ValidationErrorDetail[] = [];
+      for (const item of obj.details) {
+        if (
+          item &&
+          typeof item === 'object' &&
+          typeof (item as Record<string, unknown>).field === 'string' &&
+          typeof (item as Record<string, unknown>).issue === 'string' &&
+          VALIDATION_ISSUE_SET.has((item as Record<string, unknown>).issue as string)
+        ) {
+          validDetails.push({
+            field: String((item as Record<string, unknown>).field),
+            issue: (item as Record<string, unknown>).issue as ValidationIssue,
+            message: typeof (item as Record<string, unknown>).message === 'string'
+              ? String((item as Record<string, unknown>).message)
+              : undefined,
+          });
+        }
+      }
+      if (validDetails.length > 0) {
+        details = validDetails;
+      }
+    }
+  }
+
+  return { message, code, details, rawBody: parsed ?? bodyText };
+}
+
+/**
  * 自定义 API 请求异常类
- * 封装 HTTP 状态码以及后端返回的错误详情结构
+ * 封装 HTTP 状态码、业务错误码以及后端返回的错误明细
  */
 export class ApiError extends Error {
   /** HTTP 响应状态码 */
   public readonly status: number;
-  /** 接口返回的详细错误信息或结构体 */
-  public readonly details?: unknown;
+  /** 业务错误码 */
+  public readonly code?: ApiErrorCode;
+  /** 字段级校验明细列表 */
+  public readonly details?: ValidationErrorDetail[];
+  /** 接口返回的原始数据 */
+  public readonly rawBody?: unknown;
 
-  /**
-   * 创建 ApiError 实例
-   * @param message 错误提示信息
-   * @param status HTTP 响应状态码, 默认 500
-   * @param details 可选的附加错误详情
-   */
-  constructor(message: string, status: number = 500, details?: unknown) {
+  constructor(
+    message: string,
+    status: number = 500,
+    code?: ApiErrorCode,
+    details?: ValidationErrorDetail[],
+    rawBody?: unknown
+  ) {
     super(message);
 
     this.name = 'ApiError';
     this.status = status;
+    this.code = code;
     this.details = details;
+    this.rawBody = rawBody;
 
     Object.setPrototypeOf(this, new.target.prototype);
 
@@ -51,12 +139,12 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
   });
 
   if (!res.ok) {
-    const errorBody = await res.json().catch(() => ({}));
-    const message = errorBody.message || `HTTP ${res.status}${res.statusText ? ` (${res.statusText})` : ''}`;
-    throw new ApiError(message, res.status, errorBody);
+    const bodyText = await res.text().catch(() => '');
+    const parsed = parseApiErrorBody(bodyText, res.status, res.statusText);
+    throw new ApiError(parsed.message, res.status, parsed.code, parsed.details, parsed.rawBody);
   }
 
-  return res.json();
+  return res.json() as Promise<T>;
 }
 
 /**
