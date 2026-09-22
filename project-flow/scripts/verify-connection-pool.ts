@@ -21,6 +21,11 @@ console.log('▶ [套件 1] 运行配置边界、环境变量校验与测试隔�
   const originalEnv = { ...process.env };
 
   try {
+    // 固定默认值测试环境, 避免外部连接池配置影响断言; 空字符串按未配置处理
+    process.env.PG_CONNECTION_TIMEOUT_MS = '';
+    process.env.PG_IDLE_TIMEOUT_MS = '';
+    process.env.PG_MAX_CONNECTIONS = '';
+
     // 1. 环境变量有效性解析测试
     process.env['TEST_SAFE_INT'] = '123';
     assert.equal(parseIntegerEnv('TEST_SAFE_INT', 10), 123);
@@ -78,11 +83,25 @@ console.log('▶ [套件 1] 运行配置边界、环境变量校验与测试隔�
     assert.equal(undefinedConfig.idleTimeoutMillis, 30000, '显式 undefined 必须保留默认空闲超时 30000ms');
     assert.equal(undefinedConfig.max, 10, '显式 undefined 必须保留默认容量 10');
 
-    // 5. idleTimeoutMillis: 0 合法假值保留测试 (代表禁用空闲连接自动回收)
+    // 5. 显式 undefined 必须保留环境变量配置, 不得回退到默认值
+    process.env.PG_CONNECTION_TIMEOUT_MS = '1200';
+    process.env.PG_IDLE_TIMEOUT_MS = '5000';
+    process.env.PG_MAX_CONNECTIONS = '5';
+
+    const envConfig = buildPoolConfig({
+      connectionTimeoutMillis: undefined,
+      idleTimeoutMillis: undefined,
+      max: undefined,
+    });
+    assert.equal(envConfig.connectionTimeoutMillis, 1200, '显式 undefined 必须保留环境变量配置的连接获取超时');
+    assert.equal(envConfig.idleTimeoutMillis, 5000, '显式 undefined 必须保留环境变量配置的空闲超时');
+    assert.equal(envConfig.max, 5, '显式 undefined 必须保留环境变量配置的连接池容量');
+
+    // 6. idleTimeoutMillis: 0 合法假值保留测试 (代表禁用空闲连接自动回收)
     const zeroIdleConfig = buildPoolConfig({ idleTimeoutMillis: 0 });
     assert.equal(zeroIdleConfig.idleTimeoutMillis, 0, 'idleTimeoutMillis: 0 必须被完整保留, 不得被覆盖为默认值');
 
-    // 6. 测试连接目标隔离合并测试 (传入独立目标时清除继承的 DATABASE_URL)
+    // 7. 测试连接目标隔离合并测试 (传入独立目标时清除继承的 DATABASE_URL)
     process.env['DATABASE_URL'] = 'postgres://prod_user:pass@prod-host:5432/prod_db';
     const isolatedConfig = buildPoolConfig({ database: 'isolated_test_db' });
     assert.equal(isolatedConfig.database, 'isolated_test_db');
