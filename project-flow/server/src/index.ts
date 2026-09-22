@@ -3,52 +3,30 @@ import { createApp } from './app';
 import { db } from './prisma/db';
 import { createPrismaRepositories } from './repositories/prisma-repositories';
 import pool, { registerFatalErrorHandler } from './database/pool';
+import { createShutdownController } from './shutdown';
 
 const PORT = process.env.PORT || 3001;
 
 const app = createApp({
   repos: createPrismaRepositories(db),
-  healthCheck: () => pool.query('SELECT 1;'),
+  healthCheck: async () => {
+    // 验证共享 Prisma 客户端及最小业务表读取路径可用 (即便表为空返回 null 亦代表连接正常)
+    await db.orm.public.Project.select('id').first();
+  },
 });
 
 const server = app.listen(PORT, () => {
   console.log(`后端 REST API 服务已启动: http://localhost:${PORT}`);
 });
 
-// 优雅停机控制器 (具备幂等守卫/超时强制退出保护/统一异常收敛)
-let isShuttingDown = false;
+export const shutdownController = createShutdownController({
+  server,
+  db,
+  pool,
+  exitProcess: (code) => process.exit(code),
+});
 
-export const gracefulShutdown = async (reason: string, exitCode = 0) => {
-  if (isShuttingDown) {
-    return;
-  }
-  isShuttingDown = true;
-  console.log(`\n[Shutdown] 正在优雅关闭服务 (原因: ${reason})...`);
-
-  // 10 秒强制退出兜底保护
-  const forceExitTimer = setTimeout(() => {
-    console.error('[Shutdown] 优雅停机超时 (10s), 强制退出进程');
-    process.exit(1);
-  }, 10000);
-  forceExitTimer.unref();
-
-  server.close(async (serverErr) => {
-    if (serverErr) {
-      console.error('[Shutdown] 关闭 HTTP 服务异常:', serverErr);
-    } else {
-      console.log('[Shutdown] HTTP 服务器已停止接收新连接');
-    }
-
-    try {
-      await pool.end();
-      console.log('[Shutdown] PostgreSQL 连接池已安全释放');
-    } catch (poolErr) {
-      console.error('[Shutdown] 关闭数据库连接池异常:', poolErr);
-    } finally {
-      process.exit(exitCode);
-    }
-  });
-};
+export const gracefulShutdown = shutdownController.shutdown;
 
 // 统一绑定致命数据库错误退出
 registerFatalErrorHandler((err: Error) => {
