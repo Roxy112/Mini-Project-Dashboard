@@ -1,14 +1,18 @@
 import http from 'node:http';
 import { AddressInfo } from 'node:net';
 import assert from 'node:assert/strict';
+import { Client } from 'pg';
 import {
   buildPoolConfig,
   createPool,
   validatePoolConfig,
   parseIntegerEnv,
+  getDiscreteDatabaseConfig,
+  buildDatabaseUrlFromEnv,
   MAX_TIMER_DELAY,
 } from '../server/src/database/pool';
 import { createDb } from '../server/src/prisma/db';
+import { createApp } from '../server/src/app';
 import { createShutdownController, validateShutdownTimeout } from '../server/src/shutdown';
 
 console.log('=== 开始执行数据库连接池统一与优雅停机自动化测试 ===\n');
@@ -106,6 +110,55 @@ console.log('▶ [套件 1] 运行配置边界、环境变量校验与测试隔�
     const isolatedConfig = buildPoolConfig({ database: 'isolated_test_db' });
     assert.equal(isolatedConfig.database, 'isolated_test_db');
     assert.equal(isolatedConfig.connectionString, undefined, '自定义连接目标时必须移除继承的 connectionString 以保证测试隔离');
+
+    // 8. 密码覆盖与动态密码回调优先级测试 (P2 修复验证)
+    const passConfig = buildPoolConfig({ password: 'override_secret' });
+    assert.equal(passConfig.password, 'override_secret', '传入显式密码时必须生效');
+    assert.equal(passConfig.connectionString, undefined, '传入显式密码时不得继承默认 connectionString, 防止被 URL 密码覆盖');
+
+    const callbackFn = () => Promise.resolve('dynamic_secret');
+    const callbackConfig = buildPoolConfig({ password: callbackFn });
+    assert.equal(typeof callbackConfig.password, 'function', '传入动态密码回调函数时必须保留为 function 类型');
+    assert.equal(callbackConfig.connectionString, undefined, '传入密码回调函数时不得继承默认 connectionString');
+
+    // 9. IPv6 主机 URL 合成与 Client 回读测试 (P1 修复验证)
+    delete process.env['DATABASE_URL'];
+    process.env.PGHOST = '::1';
+    process.env.PGPORT = '5432';
+    process.env.PGUSER = 'test_user';
+    process.env.PGPASSWORD = 'test_password';
+    process.env.PGDATABASE = 'test_db';
+
+    const ipv6Url = buildDatabaseUrlFromEnv();
+    assert.ok(ipv6Url.includes('@[::1]:5432'), `IPv6 地址必须被中括号包裹: ${ipv6Url}`);
+    const ipv6Client = new Client({ connectionString: ipv6Url });
+    assert.equal((ipv6Client as any).connectionParameters.host, '[::1]', 'pg Client 必须正确解析 IPv6 格式的主机');
+
+    // 10. Unix Domain Socket 主机 URL 合成与 Client 回读测试 (P1 修复验证)
+    process.env.PGHOST = '/var/run/postgresql';
+    const socketUrl = buildDatabaseUrlFromEnv();
+    assert.ok(socketUrl.includes('?host=%2Fvar%2Frun%2Fpostgresql'), `Unix socket 必须通过 query 参数传递: ${socketUrl}`);
+    const socketClient = new Client({ connectionString: socketUrl });
+    assert.equal((socketClient as any).connectionParameters.host, '/var/run/postgresql', 'pg Client 必须正确解析 socket 路径');
+
+    // 11. 密码含特殊字符与离散配置保真度测试 (P1 修复验证)
+    process.env.PGHOST = 'localhost';
+    process.env.PGPASSWORD = 'p@ss:word/123#?&';
+    process.env.PGDATABASE = 'project#flow';
+
+    const specialUrl = buildDatabaseUrlFromEnv();
+    const specialClient = new Client({ connectionString: specialUrl });
+    assert.equal(
+      (specialClient as any).connectionParameters.password,
+      'p@ss:word/123#?&',
+      '特殊字符密码在 URL 编解码后必须无损还原'
+    );
+
+    // 验证离散原生对象直传不会发生 URL 截断 (例如 project#flow 依然完整)
+    const discrete = getDiscreteDatabaseConfig();
+    assert.equal(discrete.database, 'project#flow', '离散对象必须原生保留数据库名中的特殊字符');
+    const discretePoolConfig = buildPoolConfig();
+    assert.equal(discretePoolConfig.database, 'project#flow', '未设置 DATABASE_URL 时 PoolConfig 必须直传离散数据库名');
   } finally {
     process.env = originalEnv;
   }
@@ -404,6 +457,128 @@ console.log('▶ [套件 5] 运行退出状态单向升级、硬超时维持循�
   }
 }
 console.log('✔ [套件 5] 退出状态单向升级、硬超时维持循环与单次 finish 测试通过\n');
+
+// -------------------------------------------------------------
+// 测试套件 6: Prisma CLI 配置隔离与无副作用加载测试 (P2 修复验证)
+// -------------------------------------------------------------
+console.log('▶ [套件 6] 运行 Prisma CLI 配置隔离与无副作用加载测试...');
+{
+  const originalEnv = { ...process.env };
+  try {
+    // 设置非法的连接池环境变量, 此前导入 pool.ts 会在此处直接抛错
+    process.env.PG_MAX_CONNECTIONS = 'invalid-integer';
+    process.env.PGHOST = '127.0.0.1';
+    process.env.PGPORT = '5432';
+    process.env.PGUSER = 'cli_user';
+    process.env.PGDATABASE = 'cli_db';
+    delete process.env.DATABASE_URL;
+    delete process.env.PGPASSWORD;
+    delete process.env.DB_PASSWORD;
+
+    // 验证 connection-config 模块在非法连接池配置下依然能安全运行并输出合法 URL
+    const cliUrl = buildDatabaseUrlFromEnv();
+    assert.equal(
+      cliUrl,
+      'postgresql://cli_user@127.0.0.1:5432/cli_db',
+      'Prisma CLI 连接字符串在非法连接池配置下应无副作用正常合成'
+    );
+  } finally {
+    process.env = originalEnv;
+  }
+}
+console.log('✔ [套件 6] Prisma CLI 配置隔离与无副作用加载测试通过\n');
+
+// -------------------------------------------------------------
+// 测试套件 7: 真实 HTTP 健康检查全生命周期与边界验收 (P2 修复验证)
+// -------------------------------------------------------------
+console.log('▶ [套件 7] 运行真实 HTTP 健康检查全生命周期与边界验收测试...');
+{
+  const healthPool = createPool();
+  const healthDb = createDb(healthPool);
+
+  const mockRepos = {
+    projects: {
+      getAll: async () => [],
+      create: async () => ({ id: 1, name: 'test' }),
+      delete: async () => true,
+    },
+    tasks: {
+      getAll: async () => [],
+      create: async () => ({} as any),
+      update: async () => null,
+      delete: async () => true,
+    },
+  };
+
+  // 1. 真实运行期探活 (探针: db.orm.public.Project.select('id').first())
+  const app = createApp({
+    repos: mockRepos,
+    healthCheck: async () => {
+      // 验证共享 Prisma 客户端及最小业务表读取路径可用
+      await healthDb.orm.public.Project.select('id').first();
+    },
+  });
+
+  const server = http.createServer(app);
+  await new Promise<void>((resolve) => server.listen(0, resolve));
+  const port = (server.address() as AddressInfo).port;
+  const healthUrl = `http://localhost:${port}/api/health`;
+
+  try {
+    // 验收 1: 正常状态下 /api/health 返回 200 OK
+    const resNormal = await fetch(healthUrl);
+    assert.equal(resNormal.status, 200, '正常运行期健康检查必须返回 200');
+    const dataNormal = (await resNormal.json()) as any;
+    assert.equal(dataNormal.status, 'ok');
+    assert.equal(dataNormal.database, 'connected');
+
+    // 验收 2: 空表结果容忍测试 (first() 返回 null 时代表表为空, 探活依然视为健康)
+    let probeExecuted = false;
+    const emptyTableApp = createApp({
+      repos: mockRepos,
+      healthCheck: async () => {
+        probeExecuted = true;
+        // 模拟 Project.select('id').first() 在空表时返回 null
+        const result: { id: number } | null = null;
+        return result;
+      },
+    });
+    const emptyServer = http.createServer(emptyTableApp);
+    await new Promise<void>((resolve) => emptyServer.listen(0, resolve));
+    const emptyPort = (emptyServer.address() as AddressInfo).port;
+    try {
+      const resEmpty = await fetch(`http://localhost:${emptyPort}/api/health`);
+      assert.equal(resEmpty.status, 200, '探针返回 null 时健康检查依然判定为正常 200');
+      assert.ok(probeExecuted, '探针函数必须被实际调用执行');
+    } finally {
+      await new Promise<void>((resolve) => emptyServer.close(() => resolve()));
+    }
+
+    // 验收 3: Prisma 客户端关闭后, 健康检查真实感知并返回 503 SERVICE_UNAVAILABLE (杜绝假阳性)
+    await healthDb.close();
+
+    // 此时底层连接池如果执行 SELECT 1 依然会返回成功 (假阳性)
+    const rawPoolCheck = await healthPool.query('SELECT 1 as num;');
+    assert.equal(rawPoolCheck.rows[0].num, 1, '旧底层连接池在 Prisma 关闭后仍会虚假存活');
+
+    // 但基于 Prisma 探针的 /api/health 必须真实返回 503 且报 SERVICE_UNAVAILABLE
+    const resClosed = await fetch(healthUrl);
+    assert.equal(resClosed.status, 503, 'Prisma 客户端关闭后健康检查必须返回 503');
+    const dataClosed = (await resClosed.json()) as any;
+    assert.equal(dataClosed.code, 'SERVICE_UNAVAILABLE');
+    assert.equal(dataClosed.message, '数据库服务暂不可用');
+  } finally {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    try {
+      await healthDb.close();
+    } catch {
+      // 忽略重复关闭
+    } finally {
+      await healthPool.end();
+    }
+  }
+}
+console.log('✔ [套件 7] 真实 HTTP 健康检查全生命周期与边界验收测试通过\n');
 
 console.log('====================================================');
 console.log('🎉 所有数据库连接池与优雅停机自动化测试全部通过!');

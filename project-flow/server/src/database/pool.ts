@@ -1,23 +1,18 @@
 import 'dotenv/config';
 import { Pool, PoolConfig, types } from 'pg';
+import {
+  parseIntegerEnv,
+  getDiscreteDatabaseConfig,
+  buildDatabaseUrlFromEnv,
+} from './connection-config';
+
+export { parseIntegerEnv, getDiscreteDatabaseConfig, buildDatabaseUrlFromEnv };
 
 // 强制将 PostgreSQL DATE 类型 (OID 1082) 解析为 YYYY-MM-DD 原始字符串, 杜绝时区转换漂移
 types.setTypeParser(1082, (val: string) => val);
 
 // 1. 常量与环境变量解析辅助函数
 export const MAX_TIMER_DELAY = 2147483647;
-
-export function parseIntegerEnv(name: string, defaultValue: number): number {
-  const raw = process.env[name];
-  if (raw === undefined || raw.trim() === '') {
-    return defaultValue;
-  }
-  const parsed = Number(raw);
-  if (!Number.isSafeInteger(parsed)) {
-    throw new Error(`配置错误: 环境变量 ${name} 必须为安全整数, 收到非法值 "${raw}"`);
-  }
-  return parsed;
-}
 
 /**
  * 校验合并后的完整连接池配置 (支持 32 位定时器上限与非负/正整数约束)
@@ -66,12 +61,13 @@ export function buildPoolConfig(customConfig?: PoolConfig): PoolConfig {
     Object.entries(customConfig ?? {}).filter(([, value]) => value !== undefined)
   ) as PoolConfig;
 
-  // 检查是否自定义了连接目标 (如 database, host, user, connectionString 等)
+  // 检查是否自定义了连接目标 (如 database, host, user, password, connectionString 等)
   const hasCustomTarget = Boolean(
     overrides.connectionString ||
     overrides.database ||
     overrides.host ||
     overrides.user ||
+    overrides.password !== undefined ||
     overrides.port
   );
 
@@ -80,13 +76,7 @@ export function buildPoolConfig(customConfig?: PoolConfig): PoolConfig {
     ? {}
     : (process.env.DATABASE_URL
         ? { connectionString: process.env.DATABASE_URL }
-        : {
-            host: process.env.PGHOST || process.env.DB_HOST || 'localhost',
-            port: Number(process.env.PGPORT || process.env.DB_PORT) || 5432,
-            user: process.env.PGUSER || process.env.DB_USER || 'postgres',
-            password: process.env.PGPASSWORD || process.env.DB_PASSWORD || '',
-            database: process.env.PGDATABASE || process.env.DB_NAME || 'project_flow',
-          });
+        : getDiscreteDatabaseConfig());
 
   const merged: PoolConfig = {
     ...baseDefaults,

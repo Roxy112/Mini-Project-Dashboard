@@ -9,7 +9,10 @@ const PORT = process.env.PORT || 3001;
 
 const app = createApp({
   repos: createPrismaRepositories(db),
-  healthCheck: () => pool.query('SELECT 1;'),
+  healthCheck: async () => {
+    // 验证共享 Prisma 客户端及最小业务表读取路径可用 (即便表为空返回 null 亦代表连接正常)
+    await db.orm.public.Project.select('id').first();
+  },
 });
 
 const server = app.listen(PORT, () => {
